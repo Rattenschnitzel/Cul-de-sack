@@ -1,0 +1,864 @@
+/* ---------------------------------------------------------------------------
+   The look: a dim garage. Wooden frames, leather backpacks, shelves with price tags. */
+
+body {
+  margin: 0;
+  padding: 18px;
+  background: radial-gradient(ellipse at 50% 0%, #3a2a1c, #1c140e 70%) fixed;
+  color: #f3e6d0;
+  font-family: "Segoe UI", sans-serif;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Chunky lettering for names and headings. */
+.plaque,
+h2,
+.bag-title,
+#gold {
+  font-family: "Arial Black", "Segoe UI Black", sans-serif;
+}
+
+/* Three columns: you, your backpacks, the shop (or the fight).
+   The scavenge map takes the place of the last two. */
+#game {
+  display: grid;
+  grid-template-columns: 220px auto 400px;
+  align-items: start;
+  gap: 18px;
+}
+
+#map {
+  grid-column: 2 / -1;
+}
+
+/* A wooden frame around a panel: dark wood with a lighter inner edge. */
+.frame {
+  padding: 16px;
+  background: linear-gradient(#45301d, #3a2817);
+  border: 4px solid #1a110a;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 3px #5c3d22, 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* A name plate: light wood with dark lettering. */
+.plaque {
+  display: inline-block;
+  padding: 4px 14px;
+  background: linear-gradient(#c79a5e, #a87c45);
+  border: 3px solid #2b1a0e;
+  border-radius: 8px;
+  color: #2b1a0e;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+h2 {
+  margin: 0 0 10px;
+  color: #f3c969;
+  font-size: 20px;
+}
+
+/* Wooden buttons: a plank with cream lettering. */
+.plank-button,
+.area button {
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff3dc;
+  text-shadow: 0 1px 0 #2b1a0e;
+  background: linear-gradient(#9c6b3c, #7a5129);
+  border: 3px solid #2b1a0e;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+.plank-button:hover,
+.area button:hover {
+  background: linear-gradient(#ad7a48, #8a5c31);
+}
+
+.plank-button[hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Left: you. Your character, your numbers as a list, and the way out. */
+
+#side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#hero {
+  width: 170px;
+  height: 170px;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* Your numbers: name on the left, value on the right, with dots between. */
+#totals {
+  width: 100%;
+  margin: 4px 0;
+  padding: 10px 12px;
+  list-style: none;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+#totals li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+#totals li::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-bottom: 1px dotted rgba(243, 230, 208, 0.25);
+}
+
+#totals b {
+  order: 2;
+  color: #f3c969;
+}
+
+#scavenge-button {
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Middle: the two backpacks, side by side. */
+
+#pack-area {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: start;
+  gap: 6px 18px;
+}
+
+.bag-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.bag-title {
+  color: #f3c969;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.bag-title span {
+  font-family: "Segoe UI", sans-serif;
+  font-weight: normal;
+  text-transform: none;
+  color: #d9c7a8;
+}
+
+#hands {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #f3c969;
+}
+
+#pack-hint {
+  grid-column: 1 / -1; /* the whole width, under both backpacks */
+  min-height: 2.4em; /* room for two lines, so the page doesn't jump */
+  font-size: 13px;
+  color: #ff9d90;
+}
+
+/* A backpack: a leather bag with two straps on top. game.js sets its columns and rows. */
+.grid-bag {
+  position: relative;
+  display: inline-grid;
+  gap: 4px;
+  margin-top: 22px; /* room for the straps */
+  padding: 12px;
+  background: linear-gradient(#6b4527, #573720);
+  border: 4px solid #24160b;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 3px #7d5430, 0 8px 16px rgba(0, 0, 0, 0.55);
+}
+
+/* The two straps: leather loops sticking up from the top edge. */
+.grid-bag::before,
+.grid-bag::after {
+  content: "";
+  position: absolute;
+  top: -26px;
+  width: 26px;
+  height: 30px;
+  background: #4a2e18;
+  border: 4px solid #24160b;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+}
+
+.grid-bag::before {
+  left: 22%;
+}
+
+.grid-bag::after {
+  right: 22%;
+}
+
+/* What you wear: canvas green instead of leather brown. */
+#body {
+  background: linear-gradient(#56603c, #454e30);
+  box-shadow: inset 0 0 0 3px #6b7749, 0 8px 16px rgba(0, 0, 0, 0.55);
+}
+
+/* One square of a backpack (56 x 56, as in game.js). */
+.cell {
+  width: 56px;
+  height: 56px;
+  background: rgba(30, 18, 8, 0.45);
+  border-radius: 6px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Your hands: the 4 squares in the middle of the body, marked L and R. */
+.cell.hand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(243, 201, 105, 0.18);
+  box-shadow: inset 0 0 0 2px #f3c969;
+  font-size: 16px;
+  font-weight: bold;
+  color: rgba(243, 201, 105, 0.5);
+}
+
+/* Squares gear could add, but you don't have yet: faint dashed outlines. */
+.cell.locked {
+  background: transparent;
+  box-shadow: none;
+  border: 2px dashed rgba(243, 230, 208, 0.18);
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------------
+   Items in the backpacks. */
+
+/* An item: a box over the cells around its shape. Only its blocks (the filled
+   cells) can be grabbed, so the empty corners of odd shapes stay click-through. */
+.item {
+  display: grid;
+  position: relative; /* so the label can sit on top */
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* One filled cell of an item. The colour comes from each item in game.js. */
+.item .block {
+  background: var(--color);
+  border: 3px solid rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none; /* stops touch screens from scrolling while dragging */
+}
+
+/* The picture in the middle of the item (game.js sizes it to the shape),
+   with the timer bar along the bottom. */
+.item .label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* anything too big is cut off instead of spilling out */
+  pointer-events: none;
+}
+
+.item .icon,
+.item .picture {
+  flex: none; /* keep its size even when it's bigger than the item (the label cuts it off) */
+  line-height: 1;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+/* While dragging, the item floats above everything with a shadow under its shape. */
+.item.dragging {
+  z-index: 10;
+  opacity: 0.75; /* so the ghost shows through */
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.6));
+}
+
+.item.dragging .block {
+  cursor: grabbing;
+}
+
+/* Rarity: rare items have a blue outline, epic ones purple (common keep the dark one). */
+.item.rare .block {
+  border-color: #5aa0f0;
+}
+
+.item.epic .block {
+  border-color: #c07af0;
+}
+
+/* A holstered weapon: dashed outline, since it doesn't take a hand. */
+.item.holstered .block {
+  border-style: dashed;
+}
+
+/* A thin bar that fills up until the item acts. */
+.item .timer {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%); /* centred */
+  width: 70%;
+  max-width: 60px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+}
+
+.item .timer-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #1e1710;
+  border-radius: 2px;
+}
+
+/* While dragging: the cells the dragged item's boost would reach. */
+.cell.reach {
+  background: #a8893f;
+  box-shadow: inset 0 0 0 2px #ffe27a;
+}
+
+/* While dragging: a badge on top of an item saying what it would get, e.g. "+1 dmg".
+   The dragged item's own badge (what it would get from others) is green. */
+.item .badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #ffe27a;
+  color: #2b2118;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.item.dragging .badge {
+  background: #8fe07a;
+}
+
+/* While dragging: items that would boost, or be boosted by, the dragged one glow gold,
+   and sit above the others so their badges aren't covered. */
+.item.linked {
+  z-index: 4;
+  filter: drop-shadow(0 0 6px #ffe27a);
+}
+
+.item.linked .block {
+  border-color: #ffe27a;
+}
+
+/* The ghost: where the dragged item would land. Green = fits, red = blocked.
+   Above the other items (so it shows on top of the one in the way), below the dragged one. */
+.ghost {
+  display: grid;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ghost[hidden] {
+  display: none;
+}
+
+.ghost .block {
+  background: rgba(130, 210, 110, 0.5);
+  border: 3px dashed #b4f5a2;
+}
+
+.ghost.blocked .block {
+  background: rgba(225, 80, 65, 0.55);
+  border-color: #ff9d90;
+}
+
+/* The info card shown while the pointer is over an item. */
+#tooltip {
+  position: fixed;
+  z-index: 20;
+  max-width: 240px;
+  padding: 8px 10px;
+  background: #1a130d;
+  border: 2px solid #6b4a2b;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+#tooltip[hidden] {
+  display: none;
+}
+
+#tooltip .gives {
+  color: #f3c969;
+}
+
+/* Bonus numbers (from neighbours, gloves or extinguishers), on dark cards. */
+.bonus {
+  color: #8fe07a;
+}
+
+/* The rarity word on the info card and gear cards. */
+.rarity {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   Three screens: the shop, the map (where to scavenge) and the fight.
+   Only the parts of the current one show.
+   !important makes this win over the panels' own display settings (like #fight's flex). */
+body:not([data-screen="shop"]) .shop-only,
+body:not([data-screen="map"]) .map-only,
+body:not([data-screen="fight"]) .fight-only,
+body[data-screen="map"] .not-map {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Right: the shop. */
+
+#shop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#gold {
+  color: #f3c969;
+  font-size: 18px;
+}
+
+/* The Items / Gear tabs, and Reroll. */
+#shop-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+#shop-tabs button {
+  flex: 1;
+  padding: 6px;
+  font-weight: bold;
+  color: #d9c7a8;
+  background: #2b1d12;
+  border: 2px solid #5c3d22;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#shop-tabs button.active {
+  color: #2b1a0e;
+  background: linear-gradient(#c79a5e, #a87c45);
+  border-color: #2b1a0e;
+}
+
+#reroll:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#offers[hidden],
+#gear[hidden],
+#reroll[hidden] {
+  display: none;
+}
+
+/* The shelves: rows of three items standing on a wooden board. */
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  align-items: end;
+  padding: 6px 6px 0;
+  margin-bottom: 14px;
+  border-bottom: 12px solid #7a5129;
+  box-shadow: 0 6px 0 #2b1a0e, inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 0 0 3px 3px;
+}
+
+/* One item for sale: its picture, name and a yellow price tag. Drag it onto a backpack to buy it. */
+.shelf-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: 4px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.shelf-item .picture,
+.shelf-item .icon {
+  display: block;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.6));
+}
+
+/* A coloured glow under rare and epic items. */
+.shelf-item.rare .picture,
+.shelf-item.rare .icon {
+  filter: drop-shadow(0 0 6px #5aa0f0) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.6));
+}
+
+.shelf-item.epic .picture,
+.shelf-item.epic .icon {
+  filter: drop-shadow(0 0 8px #c07af0) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.6));
+}
+
+.shelf-name {
+  font-size: 11px;
+  text-align: center;
+  color: #d9c7a8;
+}
+
+/* The price tag: a yellow paper tag, a little crooked. Clicking it buys the item. */
+.price-tag {
+  padding: 2px 10px;
+  font-family: "Arial Black", sans-serif;
+  font-size: 14px;
+  color: #2b1a0e;
+  background: #f5d23f;
+  border: 2px solid #2b1a0e;
+  border-radius: 4px 10px 4px 10px;
+  transform: rotate(-4deg);
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.shelf-item:nth-child(even) .price-tag {
+  transform: rotate(3deg);
+}
+
+.price-tag:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.shelf-item.sold {
+  justify-content: center;
+  min-height: 90px;
+  color: #6d5a44;
+  font-size: 12px;
+  cursor: default;
+}
+
+/* Gear cards (vests, belts, pockets, carry backpacks): one per row. */
+#gear h3 {
+  margin: 10px 0 6px;
+  font-size: 13px;
+  color: #f3c969;
+}
+
+.offer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.offer-icon {
+  font-size: 28px;
+}
+
+.offer-text {
+  flex: 1;
+}
+
+.offer .gives {
+  color: #f3c969;
+}
+
+.offer button {
+  padding: 6px 10px;
+  font-weight: bold;
+  color: #2b1a0e;
+  background: #f5d23f;
+  border: 2px solid #2b1a0e;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.offer button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* A shape drawn small: empty cells are dim, filled ones coloured. */
+.mini-shape {
+  display: grid;
+  gap: 2px;
+}
+
+.mini-shape span {
+  border-radius: 2px; /* game.js sets the size */
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* The possum behind the counter, with a speech bubble for what just happened. */
+#shopkeeper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+#shopkeeper img {
+  width: 140px;
+  height: 140px;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.5));
+}
+
+.bubble {
+  position: relative;
+  flex: 1;
+  align-self: flex-start;
+  padding: 8px 10px;
+  background: #f3e6d0;
+  color: #2b1a0e;
+  border: 2px solid #2b1a0e;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* The bubble's little tail, pointing at the possum. */
+.bubble::after {
+  content: "";
+  position: absolute;
+  right: -10px;
+  top: 14px;
+  border: 6px solid transparent;
+  border-left: 8px solid #2b1a0e;
+}
+
+.bubble:empty {
+  visibility: hidden;
+}
+
+/* The Sell spot: a crate to drop items in. Lights up while an item is over it. */
+#sell {
+  margin-top: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: #f3c969;
+  background: repeating-linear-gradient(90deg, #5a3a1f 0 22px, #4a2f19 22px 24px);
+  border: 3px solid #2b1a0e;
+  border-radius: 6px;
+}
+
+#sell.hover {
+  background: #7a5129;
+  border-color: #f3c969;
+}
+
+/* ---------------------------------------------------------------------------
+   The fight panel. */
+
+#fight {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#round {
+  margin: 0;
+}
+
+.fighter-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.bar {
+  height: 14px;
+  background: #1a130d;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #5fae4f;
+  transition: width 0.15s;
+}
+
+.bar-fill.enemy {
+  background: #c4473a;
+}
+
+/* The thinner rage and exhaustion bars under your health. */
+.bar.meter {
+  height: 8px;
+  margin-top: 8px;
+}
+
+.bar-fill.rage {
+  background: #e8622c;
+}
+
+.bar-fill.exhaustion {
+  background: #8a7fd6;
+}
+
+.bar-fill.exhaustion.worn {
+  background: #d65fa0;
+}
+
+.fighter-text {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+#fight-result {
+  min-height: 1.2em;
+  font-weight: bold;
+}
+
+/* The fight log, newest line first. */
+#log {
+  margin: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-color: #6b4a2b #2b2118;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #d9c7a8;
+}
+
+/* ---------------------------------------------------------------------------
+   The scavenge screen: one card per area, side by side. */
+
+#map-power {
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: #d9c7a8;
+}
+
+#map-power b {
+  color: #f3c969;
+}
+
+#areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 240px;
+  box-sizing: border-box; /* the 240px includes the padding */
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid #5c3d22;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.area-head,
+.area-enemy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.area-head b {
+  font-size: 16px;
+}
+
+.area-icon,
+.area-enemy-icon {
+  font-size: 32px;
+}
+
+/* Easy / Medium / Hard as a coloured tag. */
+.level {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #2b2118;
+}
+
+.level-easy { background: #7fd16a; }
+.level-medium { background: #f3c969; }
+.level-hard { background: #ff7a6a; }
+
+/* Your power and the enemy's as two bars: name, bar, number. */
+.compare {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.compare-bar {
+  height: 10px;
+  background: #1a130d;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.compare-bar span {
+  display: block;
+  height: 100%;
+  background: #5fae4f;
+}
+
+.compare-bar.enemy span {
+  background: #c4473a;
+}
+
+.verdict {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.reward b {
+  color: #f3c969;
+}
+
+.area button {
+  margin-top: auto; /* buttons line up at the bottom of the cards */
+  font-size: 14px;
+}

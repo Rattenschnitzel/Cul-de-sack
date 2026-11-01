@@ -1,0 +1,12 @@
+# Files git should leave out.
+
+# Style tests and lineups: made by the tools in tools/ (style_test.py, style_mockup.py,
+# character_mockup.py, lineup.py) and can be made again with them.
+art/style-test/
+art/lineups/
+
+# Python's cache files (made when the tools run)
+__pycache__/
+
+# Local Claude Code settings for this computer
+.claude/settings.local.json

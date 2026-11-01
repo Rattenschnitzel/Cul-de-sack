@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "small-game",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5500", "--bind", "127.0.0.1", "--directory", "E:/P4/SmallGame"],
+      "port": 5500
+    },
+    {
+      "name": "shot-tracker",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5510", "--bind", "127.0.0.1", "--directory", "D:/Work/AI_own/shotTracker"],
+      "port": 5510
+    }
+  ]
+}
