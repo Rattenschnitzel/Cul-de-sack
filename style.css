@@ -23,7 +23,7 @@ h2,
    The scavenge map takes the place of the last two. */
 #game {
   display: grid;
-  grid-template-columns: 200px auto 400px;
+  grid-template-columns: 180px auto minmax(400px, 1fr); /* the shop gets all the room left */
   align-items: start;
   gap: 12px;
 }
@@ -169,11 +169,11 @@ h2 {
 /* ---------------------------------------------------------------------------
    Middle: the two backpacks, side by side. */
 
-/* The carry sack's column always has room for a sack 6 squares wide (6 x 52 px plus its edges),
-   so bigger sacks fit without the page moving around. */
+/* The carry sack's column has room for a sack 5 squares wide (5 x 52 px plus its edges), as wide as
+   the biggest sacks now; it grows if a sack is wider. */
 #pack-area {
   display: grid;
-  grid-template-columns: 340px auto;
+  grid-template-columns: minmax(288px, auto) auto;
   align-items: start;
   gap: 6px 18px;
 }
@@ -213,6 +213,7 @@ h2 {
 
 /* A backpack: a leather bag with two straps on top. game.js sets its columns and rows. */
 .grid-bag {
+  --bag: #603e23; /* its main colour, for gear to blend with */
   position: relative;
   display: inline-grid;
   gap: 4px;
@@ -246,8 +247,9 @@ h2 {
   right: 22%;
 }
 
-/* What you wear: canvas green instead of leather brown. */
+/* Your outfit: canvas green instead of leather brown. */
 #body {
+  --bag: #4d5736;
   background: linear-gradient(#56603c, #454e30);
   box-shadow: inset 0 0 0 3px #6b7749, 0 8px 16px rgba(0, 0, 0, 0.55);
 }
@@ -277,36 +279,47 @@ h2 {
   pointer-events: none;
 }
 
-/* A piece of gear you wear: a fabric patch under the items, in its own colour,
-   with stitching around the edge and a small picture in the corner. */
+/* A piece of gear you wear: a fabric patch under the items, in the colour of its kind,
+   with stitching around the edge. */
 .item.gear {
   z-index: 0;
 }
 
+/* Its colour (the colour of its kind) is mixed with the sack's own colour (--bag), a quarter
+   to three quarters, so it blends in; the stitching is faint too. */
 .item.gear .block {
-  border: 3px dashed rgba(255, 240, 210, 0.45);
-  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.3);
-}
-
-.item.gear .label {
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 3px;
+  background: color-mix(in srgb, var(--color) 25%, var(--bag));
+  border: 2px dashed rgba(255, 240, 210, 0.15);
+  box-shadow: none;
 }
 
 .item.gear.dragging {
   z-index: 10;
 }
 
-/* Connection points: the four corners of a box, in one quiet colour, faint (none are drawn under
-   gear you wear). While you drag a piece of gear (game.js puts its kind on the body), the points
-   for its kind light up in its colour and the others go away. */
+/* Connection points (none are drawn under gear you wear).
+   The square is tinted in its kind's colour (split corner to corner if it takes two kinds):
+   like worn gear, but a bit less colourful and a bit see-through. game.js sets --tint-a and --tint-b. */
 .point {
-  --arm: 14px;
+  --muted-a: color-mix(in srgb, var(--tint-a) 70%, #808080);
+  --muted-b: color-mix(in srgb, var(--tint-b) 70%, #808080);
+  --fill-a: color-mix(in srgb, color-mix(in srgb, var(--muted-a) 25%, var(--bag)) 80%, transparent);
+  --fill-b: color-mix(in srgb, color-mix(in srgb, var(--muted-b) 25%, var(--bag)) 80%, transparent);
   position: relative;
   z-index: 1;
-  margin: 3px;
   pointer-events: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--fill-a) 50%, var(--fill-b) 50%);
+}
+
+/* On top: the four corners of a box, in one quiet colour, faint. While you drag a piece of gear
+   (game.js puts its kind on the body), the corners for its kind light up in its colour and the
+   others go away. */
+.point::before {
+  --arm: 14px;
+  content: "";
+  position: absolute;
+  inset: 3px;
   opacity: 0.25;
   background:
     linear-gradient(var(--kind), var(--kind)) top left / var(--arm) 3px,
@@ -320,10 +333,10 @@ h2 {
   background-repeat: no-repeat;
 }
 
-#body[data-gear] .point { opacity: 0; }
-#body[data-gear="Vest"] .point-vest,
-#body[data-gear="Belt"] .point-belt,
-#body[data-gear="Pockets"] .point-pockets {
+#body[data-gear] .point::before { opacity: 0; }
+#body[data-gear="Vest"] .point-vest::before,
+#body[data-gear="Belt"] .point-belt::before,
+#body[data-gear="Pockets"] .point-pockets::before {
   opacity: 1;
 }
 
@@ -415,26 +428,64 @@ h2 {
   border-style: dashed;
 }
 
-/* A thin bar that fills up until the item acts. */
-.item .timer {
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  transform: translateX(-50%); /* centred */
-  width: 70%;
-  max-width: 60px;
-  height: 4px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 2px;
+/* Charging up in a fight: an item's colour fills it from the bottom to the top (the rest is dark)
+   until it acts. --charge goes from 0 (empty) to 1 (full); game.js sets it every tick, and it
+   slides smoothly between ticks. Items that don't act on a timer stay full, and the carry
+   sack's items (which don't fight) keep their colour.
+   Each block shows its own slice of one tall fill (--r = its row, --rows = how many rows),
+   so the fill runs across the whole shape. */
+@property --charge {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
 }
 
-.item .timer-fill {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: #1e1710;
-  border-radius: 2px;
+.item {
+  transition: --charge 0.1s linear;
 }
+
+[data-screen="fight"] #body .item:not(.gear) .block {
+  background-image: linear-gradient(to top,
+    var(--color) calc(var(--charge) * 100%),
+    color-mix(in srgb, var(--color) 30%, #1e1710) calc(var(--charge) * 100%));
+  background-size: 100% calc(var(--rows) * 100%);
+  background-position: 0 calc(var(--r) / max(var(--rows) - 1, 1) * 100%);
+}
+
+/* Acting: the item grows for a moment and flashes bright. */
+.item.acting {
+  z-index: 6;
+  animation: act 0.35s ease-out;
+}
+
+@keyframes act {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.18); filter: brightness(1.8); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* What an item just did, floating up from it and fading away over 2 seconds. */
+.float-number {
+  position: fixed;
+  z-index: 15;
+  transform: translateX(-50%);
+  font-family: "Arial Black", sans-serif;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 0 3px #000, 0 2px 2px #000;
+  animation: float-up 2s ease-out forwards;
+}
+
+@keyframes float-up {
+  from { opacity: 1; translate: 0 0; }
+  to { opacity: 0; translate: 0 -50px; }
+}
+
+.float-number.damage { color: #ff7a6a; }
+.float-number.exhaustion { color: #c9a6ff; font-size: 11px; }
+.float-number.block { color: #7ac0ff; }
+.float-number.heal { color: #8fe07a; }
 
 /* While dragging: the cells the dragged item's boost would reach. */
 .cell.reach {
@@ -575,8 +626,7 @@ body[data-screen="map"] .not-map {
 
 /* The shelves: rows of things standing on a wooden board. */
 .shelf {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: grid; /* game.js sets how many things fit side by side */
   gap: 6px;
   align-items: end;
   padding: 6px 6px 0;
@@ -674,6 +724,26 @@ body[data-screen="map"] .not-map {
   background: rgba(255, 255, 255, 0.08);
 }
 
+/* On a shelf: the shape with the picture on top of it, both in the same spot. */
+.shelf-picture {
+  display: grid;
+  place-items: center;
+}
+
+.shelf-picture > * {
+  grid-area: 1 / 1;
+}
+
+.shelf-picture .mini-shape span {
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.shelf-picture .mini-shape span:not([style*="background"]) {
+  background: none;
+  box-shadow: none;
+}
+
 /* The possum behind the counter: a speech bubble for what just happened, and the Reroll button. */
 #shopkeeper {
   display: flex;
@@ -735,15 +805,15 @@ body[data-screen="map"] .not-map {
   visibility: hidden;
 }
 
-/* The Sell spot: a big crate under the sacks to drop items and gear in.
+/* The Sell spot: a big crate under the carry sack to drop items and gear in.
    Lights up while something is over it. */
 #sell {
-  grid-column: 1 / -1; /* the whole width, under both sacks */
+  align-self: stretch; /* as wide as the carry sack's column */
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 110px;
-  margin-top: 8px;
+  margin-top: 10px;
   padding: 12px 8px;
   text-align: center;
   font-size: 16px;

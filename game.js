@@ -152,19 +152,21 @@ for (const [kind, keys] of Object.entries(RIGHT_POINTS)) {
 
 // Every kind of gear. shape works like an item's; each "X" is a square it adds to your body.
 // Gear can be bought as often as you like (a belt on each side, say), as long as there's room:
-// pieces of gear can't overlap each other.
+// pieces of gear can't overlap each other. Each piece has the colour of its kind.
+const GEAR_COLORS = { Vest: "#e0803a", Belt: "#d8b04a", Pockets: "#4a8ad8" };
 const GEAR = [
-  { name: "Thrift Vest", icon: "🦺", kind: "Vest", color: "#a5523a", cost: 5, shape: ["XX"] },
-  { name: "Fishing Vest", icon: "🦺", kind: "Vest", color: "#8f6a3a", cost: 9, shape: ["XX", "XX"] },
-  { name: "Hunting Vest", icon: "🦺", kind: "Vest", color: "#5f7a3a", cost: 14, shape: ["XXX", "XXX"] },
-  { name: "Rope Belt", icon: "🪢", kind: "Belt", color: "#b8955a", cost: 4, shape: ["X", "X"] },
-  { name: "Tool Belt", icon: "🧰", kind: "Belt", color: "#7a4a26", cost: 8, shape: ["XX", "XX"] },
-  { name: "Utility Belt", icon: "🧰", kind: "Belt", color: "#4f3a26", cost: 14, shape: ["XX", "XX", "XX"] },
-  { name: "Jeans", icon: "👖", kind: "Pockets", color: "#3f5f8a", cost: 4, shape: ["XX"] },
-  { name: "Cargo Shorts", icon: "🩳", kind: "Pockets", color: "#7a7a4a", cost: 9, shape: ["XX", "XX"] },
-  { name: "Cargo Pants", icon: "👖", kind: "Pockets", color: "#5a6a4a", cost: 14, shape: ["XXX", "XXX"] },
+  { name: "Thrift Vest", icon: "🦺", kind: "Vest", cost: 5, shape: ["XX"] },
+  { name: "Fishing Vest", icon: "🦺", kind: "Vest", cost: 9, shape: ["XX", "XX"] },
+  { name: "Hunting Vest", icon: "🦺", kind: "Vest", cost: 14, shape: ["XXX", "XXX"] },
+  { name: "Rope Belt", icon: "🪢", kind: "Belt", cost: 4, shape: ["X", "X"] },
+  { name: "Tool Belt", icon: "🧰", kind: "Belt", cost: 8, shape: ["XX", "XX"] },
+  { name: "Utility Belt", icon: "🧰", kind: "Belt", cost: 14, shape: ["XX", "XX", "XX"] },
+  { name: "Jeans", icon: "👖", kind: "Pockets", cost: 4, shape: ["XX"] },
+  { name: "Cargo Shorts", icon: "🩳", kind: "Pockets", cost: 9, shape: ["XX", "XX"] },
+  { name: "Cargo Pants", icon: "👖", kind: "Pockets", cost: 14, shape: ["XXX", "XXX"] },
 ];
 for (const type of GEAR) {
+  type.color = GEAR_COLORS[type.kind];
   type.isGear = true;
   type.width = type.shape[0].length;
   type.height = type.shape.length;
@@ -377,6 +379,9 @@ function drawShape(box, shape) {
       block.className = "block";
       block.style.gridRow = r + 1;
       block.style.gridColumn = c + 1;
+      // Which row it is, of how many: so in a fight, the colour can fill the whole shape from the bottom.
+      block.style.setProperty("--r", r);
+      block.style.setProperty("--rows", shape.length);
       if (up) block.style.borderTopWidth = "0";
       if (right) block.style.borderRightWidth = "0";
       if (down) block.style.borderBottomWidth = "0";
@@ -419,17 +424,21 @@ function buildBag(bag) {
       el.appendChild(piece.el);
       placeItem(piece);
     }
-    // One box per connection square, with a class for each kind it takes. None under gear you wear.
+    // One box per connection square, with a class for each kind it takes, tinted in the colours
+    // of those kinds (--tint-a and --tint-b; the same one twice if it takes one kind).
+    // None under gear you wear.
     const worn = new Set(gearPieces.flatMap((piece) =>
       cellsOf(piece, piece.col, piece.row).map((cell) => `${cell.col},${cell.row}`)));
     const kindsAt = {};
     for (const [kind, keys] of Object.entries(CONNECTION_POINTS)) {
-      for (const key of keys) (kindsAt[key] ||= []).push(`point-${kind.toLowerCase()}`);
+      for (const key of keys) (kindsAt[key] ||= []).push(kind);
     }
     for (const [key, kinds] of Object.entries(kindsAt)) {
       if (worn.has(key)) continue;
       const [col, row] = key.split(",").map(Number);
-      square(`point ${kinds.join(" ")}`, col, row);
+      const point = square(`point ${kinds.map((kind) => `point-${kind.toLowerCase()}`).join(" ")}`, col, row);
+      point.style.setProperty("--tint-a", GEAR_COLORS[kinds[0]]);
+      point.style.setProperty("--tint-b", GEAR_COLORS[kinds[kinds.length - 1]]);
     }
   }
   for (let row = 0; row < height; row++) {
@@ -508,12 +517,12 @@ function makePicture(thing, sizePx, emojiPx, turns = 0) {
   return picture;
 }
 
-// Give an item (or piece of gear) a (new) shape: update its size and redraw its blocks, picture
-// and timer bar. The picture is square and as wide as the shape's long side, so a long item's
+// Give an item (or piece of gear) a (new) shape: update its size and redraw its blocks and
+// picture. The picture is square and as wide as the shape's long side, so a long item's
 // drawing (a sword standing up, a plank lying down) fills it; the empty sides of the square are
 // cut off. The emoji (when there's no picture) is as big as the shape allows: as wide as its narrow
 // side, or a bit smaller for shapes with empty corners, so it stays on the filled cells.
-// Gear shows a small picture in its corner, so the items on it stay easy to see.
+// Gear has no picture (just its colour), so the items on it stay easy to see.
 function setShape(item, shape) {
   item.shape = shape;
   item.width = shape[0].length;
@@ -526,9 +535,7 @@ function setShape(item, shape) {
   const picturePx = Math.max(item.width, item.height) * STEP - 8;
   const label = document.createElement("div");
   label.className = "label";
-  if (item.isGear) label.appendChild(makePicture(item, 30, 18));
-  else label.appendChild(makePicture(item, picturePx, emojiPx, item.turns));
-  if (item.effect) label.insertAdjacentHTML("beforeend", `<span class="timer"><span class="timer-fill"></span></span>`);
+  if (!item.isGear) label.appendChild(makePicture(item, picturePx, emojiPx, item.turns));
   item.el.appendChild(label);
 }
 
@@ -1272,12 +1279,25 @@ function showShop() {
   showTotals(); // the gold in the list on the left
 }
 
-// One thing on a shelf: its picture, name, an optional note, and a price tag (or `owned` text).
-// Clicking the tag calls onBuy; pressing on the rest calls onPress (to drag it), if given.
-function shelfItem(thing, pictureSize, note, owned, onBuy, onPress) {
+const SHELF_CELL = 22; // one square of an item's shape on the shelf, in pixels
+
+// An item's (or piece of gear's) shape drawn small, one square per cell, with its picture on top,
+// sized as in the sacks (as wide as the shape's long side). So you can see how big it is.
+function shapePicture(type) {
+  const box = document.createElement("div");
+  box.className = "shelf-picture";
+  box.appendChild(miniShape(type.shape, type.color, SHELF_CELL));
+  const sizePx = Math.max(type.width, type.height) * (SHELF_CELL + 2) - 4;
+  box.appendChild(makePicture(type, sizePx, sizePx * 0.6));
+  return box;
+}
+
+// One thing on a shelf: its picture (an element), name, an optional note, and a price tag
+// (or `owned` text). Clicking the tag calls onBuy; pressing on the rest calls onPress (to drag it), if given.
+function shelfItem(thing, picture, note, owned, onBuy, onPress) {
   const spot = document.createElement("div");
   spot.className = `shelf-item ${thing.rarity || ""}`;
-  spot.appendChild(makePicture(thing, pictureSize, pictureSize * 0.6));
+  spot.appendChild(picture);
   spot.insertAdjacentHTML("beforeend", `<span class="shelf-name">${thing.name}</span>`);
   if (note) spot.appendChild(note);
   const tag = document.createElement("button");
@@ -1308,7 +1328,8 @@ function fillShelves(list, perShelf, spots) {
   spots.forEach((spot, index) => {
     if (index % perShelf === 0) {
       shelf = document.createElement("div");
-      shelf.className = `shelf per-${perShelf}`;
+      shelf.className = "shelf";
+      shelf.style.gridTemplateColumns = `repeat(${perShelf}, 1fr)`;
       list.appendChild(shelf);
     }
     shelf.appendChild(spot);
@@ -1324,16 +1345,16 @@ function showOffers() {
       sold.textContent = "sold";
       return sold;
     }
-    return shelfItem(type, 64, null, null, () => buy(index), (event) => dragFromShop(index, event));
+    return shelfItem(type, shapePicture(type), null, null, () => buy(index), (event) => dragFromShop(index, event));
   });
-  fillShelves(document.getElementById("offers"), 3, spots);
+  fillShelves(document.getElementById("offers"), 5, spots);
 }
 
 // The gear: always all of it. Each shows its shape; drag it onto your body to buy and put it on.
 function showGearShelf() {
-  const spots = GEAR.map((type) => shelfItem(type, 44, miniShape(type.shape, type.color, 8), null,
+  const spots = GEAR.map((type) => shelfItem(type, shapePicture(type), null, null,
     () => buyGearByTag(type), (event) => dragGearFromShop(type, event)));
-  fillShelves(document.getElementById("gear"), 3, spots);
+  fillShelves(document.getElementById("gear"), 5, spots);
 }
 
 // The carry sacks: always all of them. Click a tag to switch to that sack.
@@ -1342,9 +1363,9 @@ function showSacks() {
     const note = document.createElement("span");
     note.className = "shelf-note";
     note.textContent = `${sack.cellCount} squares`;
-    return shelfItem(sack, 44, note, sack === pack && "carrying", () => buySack(sack), null);
+    return shelfItem(sack, makePicture(sack, 44, 26), note, sack === pack && "carrying", () => buySack(sack), null);
   });
-  fillShelves(document.getElementById("sacks"), 3, spots);
+  fillShelves(document.getElementById("sacks"), 5, spots);
 }
 
 // ---------------------------------------------------------------------------
@@ -1476,7 +1497,7 @@ function rageMultiplier() {
   return 1 + ((MAX_RAGE_MULTIPLIER - 1) * player.rage) / RAGE_MAX;
 }
 
-// Show the current numbers: round, health, rage and exhaustion bars, text and each item's timer bar.
+// Show the current numbers: round, health, rage and exhaustion bars, text and how charged each item is.
 function showFight() {
   document.getElementById("round").textContent = `Round ${round}: ${area.icon} ${area.name}`;
   document.getElementById("enemy-name").textContent = `${enemy.icon} ${enemy.name}`;
@@ -1497,13 +1518,31 @@ function showFight() {
   showTimers();
 }
 
-// Fill each item's timer bar to show how close it is to acting.
+// Show how close each item is to acting: in a fight, its colour fills it up from the bottom
+// (--charge, 0 = empty, 1 = full; style.css draws it).
 function showTimers() {
   for (const item of items) {
     if (!item.effect) continue;
-    const full = item.every * 1000;
-    item.el.querySelector(".timer-fill").style.width = `${(100 * item.timer) / full}%`;
+    item.el.style.setProperty("--charge", Math.min(1, item.timer / (item.every * 1000)));
   }
+}
+
+// An item just acted: it grows and flashes for a moment, and what it did floats up from it.
+// lines = the effects, e.g. [{ text: "💥5", kind: "damage" }], one floating line each.
+function showAction(item, lines) {
+  item.el.classList.remove("acting");
+  void item.el.offsetWidth; // makes the browser notice the class was gone, so the animation starts again
+  item.el.classList.add("acting");
+  const box = item.el.getBoundingClientRect();
+  lines.forEach((line, index) => {
+    const number = document.createElement("div");
+    number.className = `float-number ${line.kind}`;
+    number.textContent = line.text;
+    number.style.left = `${box.left + box.width / 2}px`;
+    number.style.top = `${box.top + 4 + index * 16}px`;
+    number.addEventListener("animationend", () => number.remove());
+    document.body.appendChild(number);
+  });
 }
 
 // Stop the fight, pay out gold, fill the shop with new offers,
@@ -1532,7 +1571,7 @@ function showScreen(name) {
   document.body.dataset.screen = name;
 }
 
-// Back to the shop, with the items' timer bars emptied.
+// Back to the shop, with the items' timers emptied.
 function goToShop() {
   for (const item of items) item.timer = 0;
   showTimers();
@@ -1567,6 +1606,9 @@ function weaponHit(item) {
   addLog(`${item.name} hits the ${enemy.name} for ${damage}.`);
   player.rage = Math.min(RAGE_MAX, player.rage + item.rage + item.rageBonus);
   player.exhaustion = Math.min(EXHAUSTION_MAX, player.exhaustion + exhaustPerHit(item));
+  const lines = [{ text: `💥${damage}`, kind: "damage" }];
+  if (exhaustPerHit(item) > 0) lines.push({ text: `😮‍💨+${exhaustPerHit(item)}`, kind: "exhaustion" });
+  showAction(item, lines);
   if (player.exhaustion >= EXHAUSTION_MAX && !player.worn) {
     player.worn = true;
     addLog("You're worn out! Your weapons wait until you catch your breath.");
@@ -1591,10 +1633,12 @@ function tick() {
     } else if (item.effect === "block") {
       player.block += hitAmount(item, 1);
       addLog(`${item.name} gives you ${hitAmount(item, 1)} block.`);
+      showAction(item, [{ text: `🛡️+${hitAmount(item, 1)}`, kind: "block" }]);
     } else if (item.effect === "heal") {
       const healed = Math.min(hitAmount(item, 1), player.maxHealth - player.health);
       player.health += healed;
       addLog(`${item.name} heals you for ${healed}.`);
+      showAction(item, [{ text: `❤️+${healed}`, kind: "heal" }]);
     }
     if (enemy.health === 0) {
       showFight();

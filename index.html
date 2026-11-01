@@ -32,16 +32,18 @@
       <button id="map-back" class="plank-button">← Back to the shop</button>
     </div>
 
-    <!-- The two sacks: the carry sack (storage, doesn't fight) and what you wear
-         (your hands in the middle, plus squares from the vests, belts and trousers you put on).
-         game.js fills each with one square per cell. -->
+    <!-- The two sacks: the carry sack (storage, doesn't fight), with the Sell crate under it,
+         and your outfit (your hands in the middle, plus squares from the vests, belts and trousers
+         you put on). game.js fills each with one square per cell. -->
     <div id="pack-area" class="not-map">
       <div class="bag-column">
         <div class="bag-title">Carry sack <span>(doesn't fight)</span></div>
         <div id="carry" class="grid-bag"></div>
+        <!-- Drop an item or gear here to sell it (on the shop screen) -->
+        <div id="sell" class="shop-only"></div>
       </div>
       <div class="bag-column">
-        <div class="bag-title">What you wear</div>
+        <div class="bag-title">Outfit</div>
         <div id="body" class="grid-bag"></div>
         <div id="hands"></div>
         <!-- The colours of the connection points: where each kind of gear attaches -->
@@ -53,8 +55,6 @@
       </div>
       <!-- Why a weapon or piece of gear can't go where you're dragging it -->
       <div id="pack-hint"></div>
-      <!-- Drop an item or gear here to sell it (on the shop screen) -->
-      <div id="sell" class="shop-only"></div>
     </div>
 
     <!-- The shop: shelves with items, gear and sacks for sale (game.js fills them in),
