@@ -1,13 +1,14 @@
-"""Make the pictures besides the items: one per backpack (for the shop), and the interface pieces
-(plank buttons, pocket patches). Panels and the backpack keep their plain colours (pictures there
-were too busy).
+"""Make the pictures besides the items: the carry sacks and the gear (for the shop), the characters,
+and the interface pieces (plank buttons, pocket patches). Panels and the sacks keep their plain
+colours (pictures there were too busy).
 
     python tools/make_ui.py            everything that has no picture yet
     python tools/make_ui.py --all      redo everything
 
-Backpacks go to art/backpacks/<name>.png, interface pieces to art/ui/<name>.png (a few
-versions of each, -1, -2, ...), with lineups in art/lineups/ (backpacks.png, ui.png) and a
-mockup of them together (ui-mockup.png). ComfyUI must be running, as for make_icons.py.
+Sacks go to art/sacks/<name>.png, gear to art/gear/<name>.png, characters to art/characters/,
+interface pieces to art/ui/<name>.png (a few versions of each, -1, -2, ...), with lineups in
+art/lineups/ (sacks.png, gear.png, ui.png, characters.png) and a mockup of the interface pieces
+together (ui-mockup.png). ComfyUI must be running, as for make_icons.py.
 """
 
 import sys
@@ -16,22 +17,32 @@ import time
 import make_icons
 from lineup import LINEUPS, make_lineup, render
 
-BAGS = make_icons.ART / "backpacks"
+SACKS = make_icons.ART / "sacks"
+GEAR = make_icons.ART / "gear"
 UI = make_icons.ART / "ui"
 
-# What to draw for each backpack (by its name in game.js), in the item style.
-BAG_SUBJECTS = {
-    "School Backpack": "a worn school backpack",
-    "Hiking Pack": "a tall hiking backpack with a rolled sleeping mat on top",
-    "Rolling Suitcase": "a rolling suitcase with two wheels and a pull handle",
-    "Shopping Cart": "a supermarket shopping cart",
-    "Tote Bag": "a canvas tote bag with two handles",
-    "Briefcase": "a leather briefcase",
-    "Picnic Basket": "a wicker picnic basket with a checkered cloth",
-    "Utility Vest": "a utility vest with many pockets",
-    "Gym Bag": "a sports gym duffel bag",
-    "Guitar Case": "a guitar case",
-    "Lone Wolf Sling": "a single-strap sling bag with a wolf head patch",
+# What to draw for each carry sack and piece of gear (by its name in game.js), in the item style.
+SACK_SUBJECTS = {
+    "Pillowcase": "a lumpy stuffed pillowcase tied shut at the top, used as a sack",
+    "Potato Sack": "a burlap potato sack tied with string",
+    "Laundry Sack": "a big striped laundry sack with a drawstring",
+    "Giant Trash Bag": "a huge black plastic trash bag tied at the top, bulging with stuff",
+    "Grocery Sack": "a brown paper grocery sack with handles, stuffed full",
+    "Mail Sack": "a canvas mail sack with a stencilled number",
+    "Flour Sack": "a cotton flour sack with a printed label",
+    "Duffel Sack": "a green army duffel sack with a strap",
+    "Sleeping Bag": "a rolled-up sleeping bag tied with straps",
+}
+GEAR_SUBJECTS = {
+    "Thrift Vest": "a cheap faded thrift-store vest",
+    "Fishing Vest": "a fishing vest with many little pockets",
+    "Hunting Vest": "an orange and camo hunting vest with big pockets",
+    "Rope Belt": "a belt made of knotted rope",
+    "Tool Belt": "a leather tool belt with pouches",
+    "Utility Belt": "a utility belt with many pouches and clips",
+    "Jeans": "a pair of worn blue jeans",
+    "Cargo Shorts": "a pair of cargo shorts with side pockets",
+    "Cargo Pants": "a pair of baggy cargo pants with many pockets",
 }
 
 # The planks for buttons: handmade, with white paint peeling off. {shape} says how big.
@@ -81,17 +92,18 @@ def make_characters(redo):
     make_lineup("Characters", entries, "characters", columns=4, tile=220)
 
 
-def make_bags(redo):
+def make_set(title, subjects, folder, lineup_name, redo):
+    """One picture per thing in `subjects` (name -> what to draw), in the item style, into `folder`."""
     entries = []
-    for name, subject in BAG_SUBJECTS.items():
-        path = BAGS / make_icons.file_name(name)
+    for name, subject in subjects.items():
+        path = folder / make_icons.file_name(name)
         if redo or not path.exists():
             started = time.time()
             make_icons.generate(make_icons.STYLE.format(subject=subject), 7, path)
             make_icons.clear_background(path)
             print(f"  {name} ({time.time() - started:.1f}s)")
         entries.append((path, name))
-    make_lineup("Backpacks", entries, "backpacks", columns=6)
+    make_lineup(title, entries, lineup_name, columns=6)
 
 
 def make_ui(redo):
@@ -146,8 +158,10 @@ def make_mockup():
 
 def main():
     redo = "--all" in sys.argv
-    print("Backpacks:")
-    make_bags(redo)
+    print("Sacks:")
+    make_set("Carry sacks", SACK_SUBJECTS, SACKS, "sacks", redo)
+    print("Gear:")
+    make_set("Gear", GEAR_SUBJECTS, GEAR, "gear", redo)
     print("Interface pieces:")
     make_ui(redo)
     print("Characters:")

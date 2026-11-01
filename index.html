@@ -11,13 +11,17 @@
   <!-- Three columns: you on the left, your backpacks in the middle, the shop (or the fight) on the right.
        On the scavenge screen, the map takes the place of the backpacks and the shop. -->
   <div id="game">
-    <!-- You: your character, your numbers as a list (game.js fills them in), and the way out -->
-    <aside id="side" class="frame">
+    <!-- The top bar: the game's name, and the way out to go scavenging -->
+    <header id="top-bar">
       <div id="game-name">Cul-de-sack<span>a trashure hunt game</span></div>
+      <button id="scavenge-button" class="plank-button shop-only">🎒 Go scavenge →</button>
+    </header>
+
+    <!-- You: your character and your numbers as a list (game.js fills them in) -->
+    <aside id="side" class="frame">
       <img id="hero" src="art/characters/raccoon-1.png" alt="Raccoon">
       <div class="plaque">Raccoon</div>
       <ul id="totals"></ul>
-      <button id="scavenge-button" class="plank-button shop-only">🎒 Go scavenge →</button>
     </aside>
 
     <!-- The scavenge screen: pick an area to go to. game.js fills in one card per area. -->
@@ -28,44 +32,46 @@
       <button id="map-back" class="plank-button">← Back to the shop</button>
     </div>
 
-    <!-- The two backpacks: the carry backpack (storage, doesn't fight) and what you wear
-         (your hands in the middle, plus squares from vests, belts and pockets).
+    <!-- The two sacks: the carry sack (storage, doesn't fight) and what you wear
+         (your hands in the middle, plus squares from the vests, belts and trousers you put on).
          game.js fills each with one square per cell. -->
     <div id="pack-area" class="not-map">
       <div class="bag-column">
-        <div class="bag-title">Carry backpack <span>(doesn't fight)</span></div>
+        <div class="bag-title">Carry sack <span>(doesn't fight)</span></div>
         <div id="carry" class="grid-bag"></div>
       </div>
       <div class="bag-column">
         <div class="bag-title">What you wear</div>
         <div id="body" class="grid-bag"></div>
-        <div id="hands"><span id="left-hand"></span><span id="right-hand"></span></div>
+        <div id="hands"></div>
       </div>
-      <!-- Why a weapon can't go where you're dragging it -->
+      <!-- Why a weapon or piece of gear can't go where you're dragging it -->
       <div id="pack-hint"></div>
+      <!-- Drop an item or gear here to sell it (on the shop screen) -->
+      <div id="sell" class="shop-only"></div>
     </div>
 
-    <!-- The shop: shelves with the items for sale (game.js fills them in), and the possum who runs it -->
+    <!-- The shop: shelves with items, gear and sacks for sale (game.js fills them in),
+         and the possum who runs it -->
     <div id="shop" class="frame shop-only">
       <div id="shop-head">
         <div class="plaque">Shop</div>
         <div id="gold"></div>
       </div>
-      <!-- Two tabs: items for sale, and gear (vests, belts, pockets, carry backpacks) -->
-      <div id="shop-tabs">
-        <button data-tab="items">Items</button>
-        <button data-tab="gear">Gear</button>
-        <button id="reroll"></button>
-      </div>
-      <div id="offers"></div>
-      <div id="gear"></div>
-      <!-- The possum, saying what just happened in the shop -->
+      <!-- The possum, saying what just happened in the shop, with the Reroll button beside it -->
       <div id="shopkeeper">
-        <div id="shop-message" class="bubble"></div>
+        <div id="counter">
+          <div id="shop-message" class="bubble"></div>
+          <button id="reroll" class="plank-button"></button>
+        </div>
         <img src="art/characters/possum-2.png" alt="The possum who runs the shop">
       </div>
-      <!-- Drop an item here to sell it -->
-      <div id="sell"></div>
+      <h3>Items</h3>
+      <div id="offers"></div>
+      <h3>Gear <span>(drag onto your body)</span></h3>
+      <div id="gear"></div>
+      <h3>Sacks</h3>
+      <div id="sacks"></div>
     </div>
 
     <!-- The fight: one health bar per fighter, the result and the log.

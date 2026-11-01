@@ -19,17 +19,31 @@ h2,
   font-family: "Arial Black", "Segoe UI Black", sans-serif;
 }
 
-/* Three columns: you, your backpacks, the shop (or the fight).
+/* A bar across the top, then three columns: you, your sacks, the shop (or the fight).
    The scavenge map takes the place of the last two. */
 #game {
   display: grid;
-  grid-template-columns: 220px auto 400px;
+  grid-template-columns: 220px auto 420px;
   align-items: start;
   gap: 18px;
 }
 
 #map {
   grid-column: 2 / -1;
+}
+
+/* The top bar: the game's name on the left, Go scavenge on the right. */
+#top-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(#45301d, #3a2817);
+  border: 4px solid #1a110a;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 3px #5c3d22, 0 6px 14px rgba(0, 0, 0, 0.5);
+  min-height: 52px; /* keeps its height on screens without Go scavenge */
 }
 
 /* A wooden frame around a panel: dark wood with a lighter inner edge. */
@@ -97,18 +111,16 @@ h2 {
 /* The game's name at the top of the left panel. */
 #game-name {
   font-family: "Arial Black", "Segoe UI Black", sans-serif;
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
-  text-align: center;
   color: #f3c969;
   text-shadow: 0 2px 0 #1a110a;
 }
 
 #game-name span {
-  display: block;
-  margin-top: 4px;
+  margin-left: 12px;
   font-family: "Segoe UI", sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: normal;
   color: #d9c7a8;
   text-shadow: none;
@@ -151,7 +163,7 @@ h2 {
 }
 
 #scavenge-button {
-  width: 100%;
+  font-size: 18px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -185,8 +197,6 @@ h2 {
 }
 
 #hands {
-  display: flex;
-  gap: 18px;
   font-size: 13px;
   font-weight: bold;
   color: #f3c969;
@@ -249,24 +259,57 @@ h2 {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
 }
 
-/* Your hands: the 4 squares in the middle of the body, marked L and R. */
+/* Your hands: the 4 squares in the middle of the body, edged in gold. */
 .cell.hand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: rgba(243, 201, 105, 0.18);
   box-shadow: inset 0 0 0 2px #f3c969;
-  font-size: 16px;
-  font-weight: bold;
-  color: rgba(243, 201, 105, 0.5);
 }
 
-/* Squares gear could add, but you don't have yet: faint dashed outlines. */
-.cell.locked {
+/* Squares from gear: see-through, so the gear underneath shows, and above it
+   (but letting the pointer through), so they can light up while dragging. */
+.cell.on-gear {
+  position: relative;
+  z-index: 1;
   background: transparent;
-  box-shadow: none;
-  border: 2px dashed rgba(243, 230, 208, 0.18);
-  box-sizing: border-box;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+/* A piece of gear you wear: a fabric patch under the items, in its own colour,
+   with stitching around the edge and a small picture in the corner. */
+.item.gear {
+  z-index: 0;
+}
+
+.item.gear .block {
+  border: 3px dashed rgba(255, 240, 210, 0.45);
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.item.gear .label {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 3px;
+}
+
+.item.gear.dragging {
+  z-index: 10;
+}
+
+/* Connection points: hidden, except while you drag a piece of gear of their kind
+   (game.js puts the kind on the body while dragging). Then they light up. */
+.point {
+  display: none;
+  pointer-events: none;
+  border-radius: 6px;
+  border: 3px dashed #ffe27a;
+  background: rgba(255, 226, 122, 0.18);
+}
+
+#body[data-gear="Vest"] .point-vest,
+#body[data-gear="Belt"] .point-belt,
+#body[data-gear="Pockets"] .point-pockets {
+  display: block;
 }
 
 /* ---------------------------------------------------------------------------
@@ -477,42 +520,23 @@ body[data-screen="map"] .not-map {
   font-size: 18px;
 }
 
-/* The Items / Gear tabs, and Reroll. */
-#shop-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
+/* The titles above each set of shelves: Items, Gear, Sacks. */
+#shop h3 {
+  margin: 4px 0 2px;
+  font-family: "Arial Black", sans-serif;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #f3c969;
 }
 
-#shop-tabs button {
-  flex: 1;
-  padding: 6px;
-  font-weight: bold;
+#shop h3 span {
+  font-family: "Segoe UI", sans-serif;
+  font-weight: normal;
+  text-transform: none;
   color: #d9c7a8;
-  background: #2b1d12;
-  border: 2px solid #5c3d22;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
-#shop-tabs button.active {
-  color: #2b1a0e;
-  background: linear-gradient(#c79a5e, #a87c45);
-  border-color: #2b1a0e;
-}
-
-#reroll:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-#offers[hidden],
-#gear[hidden],
-#reroll[hidden] {
-  display: none;
-}
-
-/* The shelves: rows of three items standing on a wooden board. */
+/* The shelves: rows of things standing on a wooden board. */
 .shelf {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -591,49 +615,15 @@ body[data-screen="map"] .not-map {
   cursor: default;
 }
 
-/* Gear cards (vests, belts, pockets, carry backpacks): one per row. */
-#gear h3 {
-  margin: 10px 0 6px;
-  font-size: 13px;
-  color: #f3c969;
-}
-
-.offer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-  margin-bottom: 8px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-.offer-icon {
-  font-size: 28px;
-}
-
-.offer-text {
-  flex: 1;
-}
-
-.offer .gives {
-  color: #f3c969;
-}
-
-.offer button {
-  padding: 6px 10px;
-  font-weight: bold;
-  color: #2b1a0e;
-  background: #f5d23f;
-  border: 2px solid #2b1a0e;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.offer button:disabled {
-  opacity: 0.45;
+/* Sacks can't be dragged: click their tag. */
+.shelf-item.click-only {
   cursor: default;
+}
+
+/* A small note under a name, e.g. "24 squares". */
+.shelf-note {
+  font-size: 10px;
+  color: #a8957a;
 }
 
 /* A shape drawn small: empty cells are dim, filled ones coloured. */
@@ -647,7 +637,7 @@ body[data-screen="map"] .not-map {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* The possum behind the counter, with a speech bubble for what just happened. */
+/* The possum behind the counter: a speech bubble for what just happened, and the Reroll button. */
 #shopkeeper {
   display: flex;
   align-items: flex-end;
@@ -656,16 +646,36 @@ body[data-screen="map"] .not-map {
   margin-top: 6px;
 }
 
+#counter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#reroll {
+  align-self: flex-start;
+}
+
+#reroll:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#shopkeeper {
+  margin: 0 0 8px;
+}
+
 #shopkeeper img {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.5));
 }
 
 .bubble {
   position: relative;
-  flex: 1;
-  align-self: flex-start;
   padding: 8px 10px;
   background: #f3e6d0;
   color: #2b1a0e;
@@ -688,12 +698,18 @@ body[data-screen="map"] .not-map {
   visibility: hidden;
 }
 
-/* The Sell spot: a crate to drop items in. Lights up while an item is over it. */
+/* The Sell spot: a big crate under the sacks to drop items and gear in.
+   Lights up while something is over it. */
 #sell {
+  grid-column: 1 / -1; /* the whole width, under both sacks */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
   margin-top: 8px;
   padding: 12px 8px;
   text-align: center;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: bold;
   color: #f3c969;
   background: repeating-linear-gradient(90deg, #5a3a1f 0 22px, #4a2f19 22px 24px);
