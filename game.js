@@ -1,6 +1,6 @@
 const PLAYER_HEALTH = 30; // your health at the start of every fight
 
-const CELL = 56; // one sack square, in pixels (as in style.css)
+const CELL = 48; // one sack square, in pixels (as in style.css)
 const STEP = CELL + 4; // one square plus the gap between squares
 
 // Rage and exhaustion. Every weapon hit adds some of both (each weapon its own amounts).
@@ -127,30 +127,32 @@ for (const sack of SACKS) {
 
 let pack = SACKS[0]; // the carry sack you have
 
-// The body: a 6 x 6 grid. Your hands are the 2 x 2 squares in the middle (columns 2-3, rows 2-3,
-// counted from 0). Every weapon you wear must cover at least one hand square.
-const BODY_SIZE = 6;
-const HAND_CELLS = new Set(["2,2", "2,3", "3,2", "3,3"]);
+// The body: a 10 x 9 grid, big so gear (and items on it) can stick out far to every side.
+// Your hands are the 2 x 2 squares in the middle (columns 4-5, rows 3-4, counted from 0).
+// Every weapon you wear must cover at least one hand square.
+const BODY_COLS = 10;
+const BODY_ROWS = 9;
+const HAND_CELLS = new Set(["4,3", "4,4", "5,3", "5,4"]);
 
 // Where gear attaches: each piece of gear must cover at least one of the connection points for its
 // kind. They sit around the hands, the same on both sides (some squares take two kinds).
 const RIGHT_POINTS = {
-  Vest: ["3,1", "4,1", "4,2"],
-  Belt: ["4,2", "5,2", "4,3", "5,3"],
-  Pockets: ["4,3", "3,4", "4,4"],
+  Vest: ["5,2", "6,2", "6,3"],
+  Belt: ["6,3", "7,3", "6,4", "7,4"],
+  Pockets: ["6,4", "5,5", "6,5"],
 };
 const CONNECTION_POINTS = {};
 for (const [kind, keys] of Object.entries(RIGHT_POINTS)) {
   const mirrored = keys.map((key) => {
     const [col, row] = key.split(",").map(Number);
-    return `${BODY_SIZE - 1 - col},${row}`;
+    return `${BODY_COLS - 1 - col},${row}`;
   });
   CONNECTION_POINTS[kind] = new Set([...keys, ...mirrored]);
 }
 
 // Every kind of gear. shape works like an item's; each "X" is a square it adds to your body.
-// Gear can be bought as often as you like (a belt on each side, say). Where two pieces of
-// gear overlap, you still get each square only once.
+// Gear can be bought as often as you like (a belt on each side, say), as long as there's room:
+// pieces of gear can't overlap each other.
 const GEAR = [
   { name: "Thrift Vest", icon: "🦺", kind: "Vest", color: "#a5523a", cost: 5, shape: ["XX"] },
   { name: "Fishing Vest", icon: "🦺", kind: "Vest", color: "#8f6a3a", cost: 9, shape: ["XX", "XX"] },
@@ -174,7 +176,9 @@ function gearType(name) {
   return GEAR.find((type) => type.name === name);
 }
 
-const gearPieces = []; // the gear you wear: copies of gear types with col and row on the body
+// The gear you wear: copies of gear types with col and row on the body.
+// (Gear stored in the carry sack is in `items` instead, like any item there.)
+const gearPieces = [];
 let bodyCells = new Set(HAND_CELLS); // the squares you have on your body
 
 // Work out your body squares again: your hands plus the squares of every piece of gear you wear.
@@ -193,7 +197,7 @@ const bags = {
 
 // A grid's size in cells.
 function bagSize(bag) {
-  return bag === "carry" ? { width: pack.width, height: pack.height } : { width: BODY_SIZE, height: BODY_SIZE };
+  return bag === "carry" ? { width: pack.width, height: pack.height } : { width: BODY_COLS, height: BODY_ROWS };
 }
 
 // True if (col, row) is a cell items can go on in this grid.
@@ -261,9 +265,9 @@ function cellsOf(item, col, row) {
 
 // True if item fits in this grid with its top-left at (col, row). For an item: all its cells
 // are cells of the grid, none is used by another item, and (on the body) the hand rule allows it.
-// For gear: see gearProblem.
+// For gear on the body: see gearProblem (in the carry sack, gear is stored like any item).
 function fits(item, bag, col, row) {
-  if (item.isGear) return bag === "body" && !gearProblem(item, col, row);
+  if (item.isGear && bag === "body") return !gearProblem(item, col, row);
   const taken = new Set();
   for (const other of itemsIn(bag)) {
     if (other === item) continue;
@@ -276,13 +280,17 @@ function fits(item, bag, col, row) {
 }
 
 // Why a piece of gear can't go on the body at (col, row), in words; null if it can.
-// It must stay inside the body, keep off your hands, and cover at least one connection point
-// for its kind. (It may overlap other gear.)
+// It must stay inside the body, keep off your hands and other gear, and cover at least one
+// connection point for its kind.
 function gearProblem(piece, col, row) {
   const cells = cellsOf(piece, col, row);
-  const inside = cells.every((cell) => cell.col >= 0 && cell.col < BODY_SIZE && cell.row >= 0 && cell.row < BODY_SIZE);
+  const inside = cells.every((cell) => cell.col >= 0 && cell.col < BODY_COLS && cell.row >= 0 && cell.row < BODY_ROWS);
   if (!inside) return `The ${piece.name} has to stay on your body.`;
   if (cells.some((cell) => HAND_CELLS.has(`${cell.col},${cell.row}`))) return `Gear can't go over your hands.`;
+  const keys = new Set(cells.map((cell) => `${cell.col},${cell.row}`));
+  const other = gearPieces.find((other) => other !== piece &&
+    cellsOf(other, other.col, other.row).some((cell) => keys.has(`${cell.col},${cell.row}`)));
+  if (other) return `The ${piece.name} can't go over the ${other.name}.`;
   const points = CONNECTION_POINTS[piece.kind];
   if (!cells.some((cell) => points.has(`${cell.col},${cell.row}`))) {
     return `Put the ${piece.name} on at least one of the lit-up ${piece.kind.toLowerCase()} squares.`;
@@ -386,8 +394,8 @@ ghost.className = "ghost";
 ghost.hidden = true;
 
 // Draw a grid. On the body: your hand squares, the gear you wear (under the items), a square
-// on top of every gear square (so items can sit there), and the connection points, which only
-// light up while you drag a piece of gear. Then the items.
+// on top of every gear square (so items can sit there), and the connection points (which
+// light up while you drag a piece of gear of their kind). Then the items.
 // Each square gets a fixed spot, so items can sit on top of squares.
 function buildBag(bag) {
   const el = bags[bag];
@@ -411,11 +419,17 @@ function buildBag(bag) {
       el.appendChild(piece.el);
       placeItem(piece);
     }
+    // One box per connection square, with a class for each kind it takes. None under gear you wear.
+    const worn = new Set(gearPieces.flatMap((piece) =>
+      cellsOf(piece, piece.col, piece.row).map((cell) => `${cell.col},${cell.row}`)));
+    const kindsAt = {};
     for (const [kind, keys] of Object.entries(CONNECTION_POINTS)) {
-      for (const key of keys) {
-        const [col, row] = key.split(",").map(Number);
-        square(`point point-${kind.toLowerCase()}`, col, row);
-      }
+      for (const key of keys) (kindsAt[key] ||= []).push(`point-${kind.toLowerCase()}`);
+    }
+    for (const [key, kinds] of Object.entries(kindsAt)) {
+      if (worn.has(key)) continue;
+      const [col, row] = key.split(",").map(Number);
+      square(`point ${kinds.join(" ")}`, col, row);
     }
   }
   for (let row = 0; row < height; row++) {
@@ -508,7 +522,7 @@ function setShape(item, shape) {
   drawShape(item.el, shape);
   const filled = shape.join("").split("X").length - 1;
   const hasGaps = filled < item.width * item.height;
-  const emojiPx = hasGaps ? Math.sqrt(filled) * 38 : Math.min(item.width, item.height) * 52;
+  const emojiPx = hasGaps ? Math.sqrt(filled) * 33 : Math.min(item.width, item.height) * 44;
   const picturePx = Math.max(item.width, item.height) * STEP - 8;
   const label = document.createElement("div");
   label.className = "label";
@@ -532,8 +546,10 @@ function exhaustPerHit(item) {
 // Works for things you have (with their bonuses) and for types in the shop.
 function describe(item) {
   if (item.isGear) {
-    return [`${item.kind}: adds ${cellsOf(item, 0, 0).length} squares to your body`,
+    const lines = [`${item.kind}: adds ${cellsOf(item, 0, 0).length} squares to your body`,
       `<span class="gives">put it on a ${item.kind.toLowerCase()} connection point next to your hands</span>`];
+    if (item.bag === "carry") lines.unshift(`<span class="gives">in the carry sack: not worn</span>`);
+    return lines;
   }
   const lines = [];
   if (item.bag === "carry") lines.push(`<span class="gives">in the carry sack: doesn't fight</span>`);
@@ -622,9 +638,10 @@ function putGear(piece) {
   updateBonuses();
 }
 
-// Take off a piece of gear (to sell it).
+// Take off a piece of gear (to sell it), or take it out of the carry sack.
 function removeGear(piece) {
-  gearPieces.splice(gearPieces.indexOf(piece), 1);
+  if (piece.bag === "carry") items.splice(items.indexOf(piece), 1);
+  else gearPieces.splice(gearPieces.indexOf(piece), 1);
   piece.el.remove();
   updateBodyCells();
   buildBag("body");
@@ -895,7 +912,7 @@ function sellPrice(item) {
 function startDrag(item, event, fromShop = false, shopIndex = null, grab = null) {
   if (fighting || drag) return; // things stay put during a fight
   if (event.button !== 0) return; // left button picks up; right button rotates (see below)
-  if (item.isGear && !fromShop && gearInUse(item)) {
+  if (item.isGear && !fromShop && item.bag === "body" && gearInUse(item)) {
     packHint.textContent = gearInUse(item);
     return;
   }
@@ -908,6 +925,7 @@ function startDrag(item, event, fromShop = false, shopIndex = null, grab = null)
     x: event.clientX,
     y: event.clientY,
     bag: null,
+    bagBefore: item.bag, // where it was ("carry" or "body")
     col: item.col,
     row: item.row,
     overSell: false,
@@ -965,7 +983,6 @@ function moveDrag(x, y) {
     x >= spot.left && x <= spot.right && y >= spot.top && y <= spot.bottom;
   sellSpot.classList.toggle("hover", drag.overSell);
   drag.bag = drag.overSell ? null : bagUnder(x, y);
-  if (item.isGear && drag.bag !== "body") drag.bag = null; // gear only goes on the body
   if (!drag.bag) return clearDropPreview(item);
   // The nearest cell to the top-left corner, in the grid under the pointer.
   const origin = gridOrigin(drag.bag);
@@ -973,7 +990,8 @@ function moveDrag(x, y) {
   drag.row = Math.round((top - origin.top) / STEP);
   showGhost(item, drag.bag, drag.col, drag.row);
   if (item.isGear) {
-    packHint.textContent = ghost.hidden ? "" : gearProblem(item, drag.col, drag.row) || "";
+    const onBody = drag.bag === "body" && !ghost.hidden;
+    packHint.textContent = onBody ? gearProblem(item, drag.col, drag.row) || "" : "";
     return;
   }
   // Boosts and the hand rule only matter on the body.
@@ -1000,7 +1018,7 @@ function rotateDrag() {
 // Something from the shop is bought when it lands on a green ghost, and goes back to the shop otherwise.
 function endDrag(dropped) {
   if (!drag) return;
-  const { item, fromShop, shopIndex, bag } = drag;
+  const { item, fromShop, shopIndex, bag, bagBefore } = drag;
   const sold = dropped && drag.overSell;
   const landed = dropped && !sold && bag && !ghost.hidden && fits(item, bag, drag.col, drag.row);
   if (landed) {
@@ -1019,7 +1037,7 @@ function endDrag(dropped) {
   clearDropPreview(item);
   sellSpot.classList.remove("hover");
   sellSpot.textContent = SELL_IDLE_TEXT;
-  if (item.isGear) return endGearDrag(item, fromShop, landed, sold);
+  if (item.isGear) return endGearDrag(item, fromShop, landed, sold, bagBefore);
   if (fromShop) {
     if (landed) buyInto(shopIndex, item);
     else item.el.remove();
@@ -1028,21 +1046,25 @@ function endDrag(dropped) {
   updateBonuses();
 }
 
-// The end of dragging a piece of gear: buy it, move it, sell it, or put it back.
-function endGearDrag(piece, fromShop, landed, sold) {
+// The end of dragging a piece of gear: buy it, move it (on the body, in the carry sack, or
+// from one to the other), sell it, or put it back. bagBefore = where it was.
+function endGearDrag(piece, fromShop, landed, sold, bagBefore) {
   if (fromShop) {
     if (landed) buyGear(piece);
     else piece.el.remove();
     return;
   }
   if (sold) return sellGear(piece);
-  if (landed) {
-    updateBodyCells();
-    buildBag("body");
-    updateBonuses();
-  } else {
-    placeItem(piece);
-  }
+  if (!landed) return placeItem(piece);
+  // Worn gear is in gearPieces, stored gear in items: move it to the right list.
+  if (bagBefore === "body") gearPieces.splice(gearPieces.indexOf(piece), 1);
+  else items.splice(items.indexOf(piece), 1);
+  if (piece.bag === "body") gearPieces.push(piece);
+  else items.push(piece);
+  placeItem(piece);
+  updateBodyCells();
+  buildBag("body");
+  updateBonuses();
 }
 
 // The pointer is captured by the dragged thing, so these events reach the page from there.
@@ -1084,6 +1106,12 @@ const shopMessage = document.getElementById("shop-message");
 const rerollButton = document.getElementById("reroll");
 rerollButton.textContent = `🎲 Reroll, ${REROLL_COST}g`;
 rerollButton.addEventListener("click", reroll);
+
+// For testing: 10 free gold.
+document.getElementById("free-gold").addEventListener("click", () => {
+  gold += 10;
+  showShop();
+});
 
 // Pick OFFER_COUNT different item types at random. Each item's chance depends on
 // its rarity's weight: a common item is 6 times as likely as an epic one.
@@ -1153,22 +1181,27 @@ function dragGearFromShop(type, event) {
   startDrag(piece, event, true, null, shelfGrab(type));
 }
 
-// Pay for a piece of gear (already given a place on the body) and put it on.
+// Pay for a piece of gear (already given a place on the body or in the carry sack) and put it there.
 function buyGear(piece) {
   gold -= piece.cost;
-  putGear(piece);
-  shopMessage.textContent = `You put on the ${piece.name}.`;
+  if (piece.bag === "body") {
+    putGear(piece);
+    shopMessage.textContent = `You put on the ${piece.name}.`;
+  } else {
+    putItem(piece);
+    shopMessage.textContent = `You put the ${piece.name} in your carry sack.`;
+  }
   showShop();
 }
 
-// Buy gear with the price tag: it goes to the first spot on your body where it fits.
+// Buy gear with the price tag: it goes to the first spot on your body where it fits,
+// or else to the first free spot in the carry sack.
 function buyGearByTag(type) {
-  const spot = findFreeSpot(type, "body");
-  if (!spot) {
-    shopMessage.textContent = `No spot left for the ${type.name}.`;
-    return;
+  for (const bag of ["body", "carry"]) {
+    const spot = findFreeSpot(type, bag);
+    if (spot) return buyGear(makeItem(type, bag, spot.col, spot.row));
   }
-  buyGear(makeItem(type, "body", spot.col, spot.row));
+  shopMessage.textContent = `No spot left for the ${type.name}.`;
 }
 
 // Take off a piece of gear and pay for it.
@@ -1610,8 +1643,8 @@ function startFight(chosen) {
 // and a Shield and a Boomerang in your carry sack (a pillowcase).
 buildBag("carry");
 buildBag("body");
-addItem(itemType("Sword"), "body", 2, 2);
-addItem(itemType("Dagger"), "body", 3, 2);
+addItem(itemType("Sword"), "body", 4, 3);
+addItem(itemType("Dagger"), "body", 5, 3);
 addItem(itemType("Shield"), "carry", 0, 0);
 addItem(itemType("Boomerang"), "carry", 2, 0);
 
