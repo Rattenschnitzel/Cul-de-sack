@@ -1,6 +1,6 @@
-# SmallGame
+# Cul-de-sack (a trashure hunt game)
 
-A small game project. It has nothing to do with EnvRebuild (`E:\P4\EnvRebuild`): never read,
+A small game project, in the folder `E:\P4\SmallGame`. On GitHub: https://github.com/Rattenschnitzel/Cul-de-sack It has nothing to do with EnvRebuild (`E:\P4\EnvRebuild`): never read,
 change or depend on that folder from here.
 
 ## The game
