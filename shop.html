@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cul-de-sack: a trashure hunt game</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="items.js"></script>   <!-- the shared item list and critters (needed early: the critter picture below uses it) -->
+  <script src="weapons.js"></script> <!-- the street fight's weapon rules: your numbers and the info cards -->
+</head>
+<!-- data-screen says which screen shows: "shop", "map" (where to scavenge) or "fight".
+     game.js switches it, and style.css hides the parts that belong to the other screens. -->
+<body data-screen="shop">
+  <!-- Three columns: you on the left, your backpacks in the middle, the shop (or the fight) on the right.
+       On the scavenge screen, the map takes the place of the backpacks and the shop. -->
+  <div id="game">
+    <!-- The top bar: the game's name, and the way out to go scavenging -->
+    <header id="top-bar">
+      <div id="game-name"><a href="index.html" title="Back to the start menu" style="color:inherit;text-decoration:none">Cul-de-sack</a><span>a trashure hunt game</span></div>
+      <button id="scavenge-button" class="plank-button shop-only">🎒 Go scavenge →</button>
+    </header>
+
+    <!-- You: your character and your numbers as a list (game.js fills them in) -->
+    <aside id="side" class="frame">
+      <img id="hero" src="art/catalog/critters/raccoon.png" alt="Raccoon" style="image-rendering: pixelated">
+      <div class="plaque" id="hero-name">Raccoon</div>
+      <script>
+        // The critter picked on the start menu.
+        (() => {
+          let k = null;
+          try { k = localStorage.getItem("culdesack.critter"); } catch (e) { /* storage off */ }
+          if (!k || !CRITTERS[k]) return;
+          document.getElementById("hero").src = `art/catalog/critters/${k}.png`;
+          document.getElementById("hero").alt = document.getElementById("hero-name").textContent = CRITTERS[k].name;
+        })();
+      </script>
+      <ul id="totals"></ul>
+    </aside>
+
+    <!-- The scavenge screen: pick an area to go to. game.js fills in one card per area. -->
+    <div id="map" class="frame map-only">
+      <h2>Where do you go scavenging?</h2>
+      <div id="map-power"></div>
+      <div id="areas"></div>
+      <button id="map-back" class="plank-button">← Back to the shop</button>
+    </div>
+
+    <!-- The two sacks: the carry sack (storage, doesn't fight), with the Sell crate under it,
+         and your outfit (a 6 x 6 block round your hands; gear is switched off for now).
+         game.js fills each with one square per cell. -->
+    <div id="pack-area" class="not-map">
+      <div class="bag-column">
+        <div class="bag-title">Carry sack <span>(doesn't fight)</span></div>
+        <div id="carry" class="grid-bag"></div>
+        <!-- Drop an item or gear here to sell it (on the shop screen) -->
+        <div id="sell" class="shop-only"></div>
+      </div>
+      <div class="bag-column">
+        <div class="bag-title">Outfit</div>
+        <div id="body" class="grid-bag"></div>
+        <div id="hands"></div>
+        <!-- The colours of the connection points: where each kind of gear attaches -->
+        <div id="gear-key">
+          <span class="point-vest">Vest</span>
+          <span class="point-belt">Belt</span>
+          <span class="point-pockets">Pockets</span>
+        </div>
+      </div>
+      <!-- Why a weapon or piece of gear can't go where you're dragging it -->
+      <div id="pack-hint"></div>
+    </div>
+
+    <!-- The shop: shelves with items, gear and sacks for sale (game.js fills them in),
+         and the possum who runs it -->
+    <div id="shop" class="frame shop-only">
+      <div id="shop-head">
+        <div class="plaque">Shop</div>
+        <div id="gold"></div>
+        <!-- For testing: free gold -->
+        <button id="free-gold" class="plank-button" title="For testing">+10g</button>
+      </div>
+      <!-- The possum, saying what just happened in the shop, with the Reroll button beside it -->
+      <div id="shopkeeper">
+        <div id="counter">
+          <div id="shop-message" class="bubble"></div>
+          <button id="reroll" class="plank-button"></button>
+        </div>
+        <img src="art/characters/possum-2.png" alt="The possum who runs the shop">
+      </div>
+      <h3>Items</h3>
+      <div id="offers"></div>
+      <h3>Gear <span>(drag onto your body, or into your sack to keep)</span></h3>
+      <div id="gear"></div>
+      <h3>Sacks</h3>
+      <div id="sacks"></div>
+    </div>
+
+    <!-- The fight: one health bar per fighter, the result and the log.
+         game.js fills in the numbers. -->
+    <div id="fight" class="frame fight-only">
+      <h2 id="round"></h2>
+      <div class="fighter">
+        <div class="fighter-name">You</div>
+        <div class="bar"><div class="bar-fill" id="player-bar"></div></div>
+        <div class="fighter-text" id="player-text"></div>
+        <!-- Rage (makes weapons hit harder) and exhaustion (too much and weapons stop) -->
+        <div class="bar meter"><div class="bar-fill rage" id="rage-bar"></div></div>
+        <div class="fighter-text" id="rage-text"></div>
+        <div class="bar meter"><div class="bar-fill exhaustion" id="exhaustion-bar"></div></div>
+        <div class="fighter-text" id="exhaustion-text"></div>
+      </div>
+      <div class="fighter">
+        <div class="fighter-name" id="enemy-name"></div>
+        <div class="bar"><div class="bar-fill enemy" id="enemy-bar"></div></div>
+        <div class="fighter-text" id="enemy-text"></div>
+      </div>
+      <div id="fight-result"></div>
+      <button id="back-button" class="plank-button" hidden>🛒 Back to the shop</button>
+      <!-- What happened in the fight, newest first -->
+      <ul id="log"></ul>
+    </div>
+  </div>
+
+  <!-- The info card that shows while the pointer is over an item -->
+  <div id="tooltip" hidden></div>
+
+  <script src="game.js"></script>
+</body>
+</html>

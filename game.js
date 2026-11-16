@@ -32,43 +32,9 @@ const RECOVERED_AT = 50;        // worn out until exhaustion is down to this
 // A holster lets the weapon sitting right on top of it hang there without taking up a hand.
 //
 // rarity is how strong an item is: "common", "rare" or "epic". Rarer items show up less in the shop.
-const ITEM_TYPES = [
-  // Common: simple, one thing each.
-  { name: "Dagger", icon: "🔪", rarity: "common", color: "#a9b7c0", shape: ["X"], effect: "damage", amount: 2, every: 1, rage: 4, exhaust: 5, cost: 4 },
-  { name: "Sword", icon: "🗡️", rarity: "common", color: "#b8c4cc", shape: ["X", "X"], effect: "damage", amount: 5, every: 2, rage: 10, exhaust: 10, cost: 6 },
-  { name: "Brass Knuckles", icon: "👊", rarity: "common", color: "#d4b04a", shape: ["X"], effect: "damage", amount: 3, every: 1.2, rage: 6, exhaust: 5, cost: 5 },
-  { name: "Wooden Board", icon: "🪵", rarity: "common", color: "#b98a55", shape: ["XXX"], effect: "damage", amount: 6, every: 2.2, rage: 10, exhaust: 12, cost: 5 },
-  { name: "Frying Pan", icon: "🍳", rarity: "common", color: "#7d848a", shape: ["XX"], effect: "damage", amount: 6, every: 2.5, rage: 12, exhaust: 12, cost: 6 },
-  { name: "Broom", icon: "🧹", rarity: "common", color: "#d8b56a", shape: ["X", "X", "X", "X"], effect: "damage", amount: 4, every: 1.4, rage: 5, exhaust: 4, cost: 5 },
-  { name: "Paper Helmet", icon: "🪖", rarity: "common", color: "#e8e1cf", shape: ["X"], effect: "block", amount: 2, every: 2, cost: 3 },
-  { name: "Traffic Cone", icon: "🚧", rarity: "common", color: "#e9773a", shape: [".X.", "XXX"], effect: "block", amount: 4, every: 2.5, cost: 6 },
-  { name: "Trash Can Lid", icon: "🗑️", rarity: "common", color: "#9aa3a8", shape: ["XX"], effect: "block", amount: 2, every: 1.5, cost: 5 },
-  { name: "Spare Tire", icon: "🛞", rarity: "common", color: "#5d5d5d", shape: ["XX", "XX"], effect: "block", amount: 4, every: 3, cost: 5 },
-  { name: "Lemonade", icon: "🍋", rarity: "common", color: "#f2dc6b", shape: ["X"], effect: "heal", amount: 3, every: 3, cost: 4 },
-  { name: "Bandages", icon: "🩹", rarity: "common", color: "#f0d2b0", shape: ["XX"], effect: "heal", amount: 4, every: 3, cost: 5 },
-  { name: "Water Bottle", icon: "💧", rarity: "common", color: "#7fc4e8", shape: ["X", "X"], recovery: 3, cost: 4 },
-  { name: "Bubble Wrap", icon: "🫧", rarity: "common", color: "#cfe6f2", shape: ["X"], cost: 4, gives: { block: 1 } },
-  // Rare: stronger, or they help other items.
-  { name: "Greatsword", icon: "⚔️", rarity: "rare", color: "#9fb0bd", shape: ["X", "X", "X"], effect: "damage", amount: 9, every: 2.5, rage: 16, exhaust: 18, cost: 9 },
-  { name: "Boomerang", icon: "🪃", rarity: "rare", color: "#d08a4e", shape: ["X.", "XX", ".X"], effect: "damage", amount: 4, every: 1.5, rage: 8, exhaust: 6, cost: 7 },
-  { name: "Axe", icon: "🪓", rarity: "rare", color: "#a88a68", shape: ["XX", "XX"], effect: "damage", amount: 9, every: 3, rage: 16, exhaust: 18, cost: 8 },
-  { name: "Cricket Bat", icon: "🏏", rarity: "rare", color: "#c9a26b", shape: ["X", "X", "X"], effect: "damage", amount: 7, every: 2, rage: 12, exhaust: 14, cost: 7 },
-  { name: "Darts", icon: "🎯", rarity: "rare", color: "#d9534f", shape: ["X"], effect: "damage", amount: 3, every: 0.8, rage: 3, exhaust: 4, cost: 7 },
-  { name: "Shield", icon: "🛡️", rarity: "rare", color: "#c9a25a", shape: ["XX", "XX"], effect: "block", amount: 3, every: 3, cost: 6, gives: { damage: 1 } },
-  { name: "Herb", icon: "🌿", rarity: "rare", color: "#8fbf75", shape: ["X"], effect: "heal", amount: 2, every: 2.5, cost: 5, gives: { speed: 0.25 } },
-  { name: "Watermelon", icon: "🍉", rarity: "rare", color: "#6fae5a", shape: ["XX", "XX"], effect: "heal", amount: 6, every: 4, cost: 8, gives: { reach: "row", heal: 1 } },
-  { name: "Hot Sauce", icon: "🌶️", rarity: "rare", color: "#e0503c", shape: ["X"], rageGain: 3, cost: 5 },
-  { name: "Lawn Chair", icon: "🪑", rarity: "rare", color: "#6fb8a0", shape: ["X.", "XX"], recovery: 5, cost: 6 },
-  { name: "Garden Gloves", icon: "🧤", rarity: "rare", color: "#a3c46a", shape: ["XX"], cost: 5, gives: { calm: 4 } },
-  { name: "Magnet", icon: "🧲", rarity: "rare", color: "#c45a5a", shape: ["X"], cost: 7, gives: { reach: "row", speed: 0.15 } },
-  { name: "Flashlight", icon: "🔦", rarity: "rare", color: "#e3c25a", shape: ["XX"], cost: 7, gives: { reach: "column", damage: 1 } },
-  { name: "Fire Extinguisher", icon: "🧯", rarity: "rare", color: "#d6453a", shape: ["X", "X"], cost: 6, gives: { reach: "column", calm: 3 } },
-  { name: "Holster", icon: "👝", rarity: "rare", color: "#8a5a3a", shape: ["XX"], cost: 6, holster: true },
-  // Epic: strong and they help other items too.
-  { name: "Wrench", icon: "🔧", rarity: "epic", color: "#8d969e", shape: ["X", "X"], effect: "damage", amount: 4, every: 1.3, rage: 6, exhaust: 7, cost: 9, gives: { heal: 1 } },
-  { name: "Sledgehammer", icon: "🔨", rarity: "epic", color: "#8a7a6a", shape: ["XXX", ".X.", ".X."], effect: "damage", amount: 14, every: 3, rage: 20, exhaust: 25, cost: 10, gives: { reach: "row", rage: 3 } },
-  { name: "Boombox", icon: "📻", rarity: "epic", color: "#4a4f6a", shape: ["XX", "XX"], cost: 11, rageGain: 2, gives: { reach: "row", rage: 4 } },
-];
+// The items now live in items.js (shared with the street fight and the weapons designer, which
+// can edit them). Items switched off in the designer don't show up here.
+const ITEM_TYPES = loadItems().filter((type) => !type.off);
 
 // How the rarities look, and how often each shows up in the shop (out of 10).
 const RARITIES = {
@@ -181,11 +147,17 @@ function gearType(name) {
 // The gear you wear: copies of gear types with col and row on the body.
 // (Gear stored in the carry sack is in `items` instead, like any item there.)
 const gearPieces = [];
-let bodyCells = new Set(HAND_CELLS); // the squares you have on your body
+// Gear (vests, belts, trousers) is switched off for now: no gear shelf, no connection points.
+// Instead the Outfit is a fixed 6 x 6 block: your hands plus 2 squares on every side of them
+// (columns 2-7, rows 1-6). Set GEAR_ON to true to bring gear back.
+const GEAR_ON = false;
+const OUTFIT_CELLS = new Set();
+for (let col = 2; col <= 7; col++) for (let row = 1; row <= 6; row++) OUTFIT_CELLS.add(`${col},${row}`);
+let bodyCells = new Set(OUTFIT_CELLS); // the squares you have on your body
 
-// Work out your body squares again: your hands plus the squares of every piece of gear you wear.
+// Work out your body squares again: the Outfit block plus the squares of every piece of gear you wear.
 function updateBodyCells() {
-  bodyCells = new Set(HAND_CELLS);
+  bodyCells = new Set(OUTFIT_CELLS);
   for (const piece of gearPieces) {
     for (const cell of cellsOf(piece, piece.col, piece.row)) bodyCells.add(`${cell.col},${cell.row}`);
   }
@@ -211,7 +183,7 @@ function inBag(bag, col, row) {
 // Weapons are the items that do damage. Only weapons you wear fight, and each must
 // be in your hands: cover at least one hand square.
 function isWeapon(item) {
-  return item.effect === "damage";
+  return isWeaponItem(item); // (weapons.js: an item that attacks in the street fight)
 }
 
 // Which boost a `gives` has (its one key besides reach), e.g. "damage".
@@ -341,6 +313,7 @@ function isHolstered(placed, layout) {
 // Every weapon you wear that isn't holstered must cover at least one hand square.
 // Moving a holster counts too: it mustn't leave a weapon out of your hands.
 function handProblem(item, col, row) {
+  return null; // For now weapons can go anywhere on the Outfit (the street fight doesn't use hands).
   if (!isWeapon(item) && !item.holster) return null;
   const layout = layoutWith(item, col, row);
   for (const spot of layout) {
@@ -434,7 +407,7 @@ function buildBag(bag) {
       for (const key of keys) (kindsAt[key] ||= []).push(kind);
     }
     for (const [key, kinds] of Object.entries(kindsAt)) {
-      if (worn.has(key)) continue;
+      if (!GEAR_ON || worn.has(key)) continue;
       const [col, row] = key.split(",").map(Number);
       const point = square(`point ${kinds.map((kind) => `point-${kind.toLowerCase()}`).join(" ")}`, col, row);
       point.style.setProperty("--tint-a", GEAR_COLORS[kinds[0]]);
@@ -490,7 +463,7 @@ function rotateShape(shape) {
 // or "art/gear/tool-belt.png".
 function pictureFile(thing) {
   const folder = thing.folder ? `${thing.folder}/` : "";
-  return `art/${folder}${thing.name.toLowerCase().replaceAll(" ", "-")}.png`;
+  return `art/${folder}${thing.id || thing.name.toLowerCase().replaceAll(" ", "-")}.png`;   // id: so a renamed item keeps its picture
 }
 
 const missingPictures = new Set(); // things with no picture file: they use their emoji
@@ -560,20 +533,7 @@ function describe(item) {
   }
   const lines = [];
   if (item.bag === "carry") lines.push(`<span class="gives">in the carry sack: doesn't fight</span>`);
-  if (item.effect) {
-    const bonus = item.bonus ? `<b class="bonus">+${item.bonus}</b>` : "";
-    const time = (item.speed || 1) > 1 ? `<b class="bonus">${seconds(item)}</b>` : seconds(item);
-    lines.push(`${item.amount}${bonus} ${item.effect} every ${time}s`);
-  }
-  if (isWeapon(item)) {
-    const tire = exhaustPerHit(item);
-    const tireText = tire < item.exhaust ? `<b class="bonus">${tire}</b>` : tire;
-    const rage = item.rageBonus ? `${item.rage}<b class="bonus">+${item.rageBonus}</b>` : item.rage;
-    lines.push(`+${rage} rage, +${tireText} exhaustion per hit`);
-  }
-  if (item.recovery) lines.push(`exhaustion drops ${item.recovery}/s faster`);
-  if (item.rageGain) lines.push(`+${item.rageGain} rage per second`);
-  if (item.gives) lines.push(`<span class="gives">${givesText(item.gives)}</span>`);
+  lines.push(...itemSummary(item)); // what it does in the street fight (weapons.js)
   if (item.holster) lines.push(`<span class="gives">a weapon right on top of it doesn't need your hands</span>`);
   if (item.holstered) lines.push(`<span class="gives">holstered: doesn't need your hands</span>`);
   return lines;
@@ -754,8 +714,8 @@ function updateBonuses() {
     }
   }
   for (const item of items) item.el.classList.toggle("holstered", item.holstered);
-  const held = weaponsInHands().map((item) => `${item.icon} ${item.name}`);
-  document.getElementById("hands").textContent = `In your hands: ${held.join(", ") || "nothing"}`;
+  const held = itemsIn("body").filter(isWeapon).map((item) => `${item.icon} ${item.name}`);
+  document.getElementById("hands").textContent = `Weapons you wear: ${held.join(", ") || "none yet"}`;
   showTotals();
 }
 
@@ -800,19 +760,36 @@ function playerPower() {
 
 // The list on the left: your gold, health, per-second numbers and power.
 function showTotals() {
-  const totals = perSecond();
-  const show = (n) => n.toFixed(1);
+  const { hero, weapons } = streetLoadout();
   const line = (tip, label, value) => `<li title="${tip}"><span>${label}</span><b>${value}</b></li>`;
   document.getElementById("totals").innerHTML = [
     line("Gold to spend in the shop", "💰 Gold", gold),
-    line("Your health at the start of a fight", "❤️ Health", PLAYER_HEALTH),
-    line("Damage per second from all weapons you wear, without rage", "⚔️ Damage/s", show(totals.damage)),
-    line("Block per second", "🛡️ Block/s", show(totals.block)),
-    line("Healing per second", "🌿 Heal/s", show(totals.heal)),
-    line("Exhaustion your weapons cause per second", "😓 Tiring/s", show(totals.tiring)),
-    line("Exhaustion that drops by itself per second", "😮‍💨 Recovery/s", show(totals.recovery)),
-    line("Health + 10 x (damage + block + heal per second)", "💪 Power", playerPower()),
+    line("Your health in the street fight", "❤️ Health", hero.maxHealth),
+    line("Damage per second from all the weapons you wear (crits counted, blasts and chains not)", "⚔️ Damage/s",
+         Math.round(weapons.reduce((sum, w) => sum + w.dps, 0))),
+    line("How many weapons you wear", "🗡️ Weapons", weapons.length),
+    line("Every bite hurts this much less", "🛡️ Armor", hero.armor),
+    line("Health back per second", "🌿 Regen/s", hero.regen.toFixed(1)),
+    line("How fast you walk", "👟 Speed", Math.round(hero.move)),
+    line("Street fights so far", "🗓️ Round", round),
   ].join("");
+}
+
+// The critter picked on the start menu.
+function critterKey() {
+  let k = null;
+  try { k = localStorage.getItem("culdesack.critter"); } catch (e) { /* storage off */ }
+  return CRITTERS[k] ? k : "raccoon";
+}
+
+// What you wear on your Outfit, as weapons.js wants it: { id, col, row, shape } for every item.
+function wornForStreet() {
+  return itemsIn("body").filter((item) => !item.isGear).map((item) => ({ id: item.id, col: item.col, row: item.row, shape: item.shape }));
+}
+
+// Your numbers in the street fight, from your critter and what you wear (weapons.js).
+function streetLoadout() {
+  return makeLoadout(critterKey(), wornForStreet(), ITEM_TYPES);
 }
 
 // A boost in a few words, for the badges while dragging, e.g. "+1 dmg" or "+15% speed".
@@ -1106,7 +1083,7 @@ document.addEventListener("contextmenu", (event) => {
 const OFFER_COUNT = 5;
 const REROLL_COST = 1;
 
-let gold = 10;
+let gold = 20; // what you start with
 let offers = []; // the item types for sale right now; null where one was bought
 
 const shopMessage = document.getElementById("shop-message");
@@ -1314,7 +1291,7 @@ function shelfItem(thing, picture, note, owned, onBuy, onPress) {
   spot.appendChild(tag);
   if (onPress) spot.addEventListener("pointerdown", onPress);
   else spot.classList.add("click-only");
-  if (thing.amount !== undefined || thing.isGear || thing.recovery || thing.rageGain || thing.gives || thing.holster) {
+  if (thing.fight || thing.amount !== undefined || thing.isGear || thing.recovery || thing.rageGain || thing.gives || thing.holster) {   // (sacks have no card)
     spot.addEventListener("pointerenter", () => showTooltip(thing, spot));
     spot.addEventListener("pointerleave", hideTooltip);
   }
@@ -1352,6 +1329,9 @@ function showOffers() {
 
 // The gear: always all of it. Each shows its shape; drag it onto your body to buy and put it on.
 function showGearShelf() {
+  const shelf = document.getElementById("gear");
+  shelf.hidden = shelf.previousElementSibling.hidden = document.getElementById("gear-key").hidden = !GEAR_ON;
+  if (!GEAR_ON) return;
   const spots = GEAR.map((type) => shelfItem(type, shapePicture(type), null, null,
     () => buyGearByTag(type), (event) => dragGearFromShop(type, event)));
   fillShelves(document.getElementById("gear"), 5, spots);
@@ -1579,12 +1559,42 @@ function goToShop() {
 }
 
 // From the shop to the scavenge screen.
+// "Go scavenge" opens the street fight (fight.html) on top of the shop, in a frame, so the shop keeps
+// your things while you're out. It fights with what you wear on your Outfit. When the round is over it
+// sends back the gold you gathered, and you're back in the shop to spend it.
 function goScavenge() {
   if (drag) return;
   packHint.textContent = "";
-  showMap();
-  showScreen("map");
+  if (!streetLoadout().weapons.length) {
+    shopMessage.textContent = "Put a weapon on your Outfit first! Your critter can't fight without one.";
+    return;
+  }
+  try {
+    localStorage.setItem("culdesack.fightLoadout", JSON.stringify({ placed: wornForStreet(), round }));
+  } catch (e) { /* storage off: the fight uses the designer's backpack instead */ }
+  hideTooltip();
+  const frame = document.createElement("iframe");
+  frame.id = "street";
+  frame.src = `fight.html?from=shop&critter=${critterKey()}`;
+  frame.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:1000;background:#1d2a1f";
+  document.body.appendChild(frame);
+  frame.focus();
 }
+
+// The street fight is over: it tells us what you gathered.
+addEventListener("message", (event) => {
+  const result = event.data;
+  if (!result || result.type !== "street-done") return;
+  document.getElementById("street")?.remove();
+  gold += result.gold;
+  if (result.escaped) wins++;
+  round++;
+  newOffers();
+  shopMessage.textContent = result.escaped
+    ? `Welcome back! You brought ${result.gold} gold home. New items in the shop.`
+    : `Ouch, they chased you off and you dropped most of your loot: +${result.gold} gold. New items in the shop.`;
+  showShop();
+});
 
 // Rage and exhaustion change by themselves each tick: exhaustion drops,
 // rage drops (but items can add some).
@@ -1683,14 +1693,12 @@ function startFight(chosen) {
 // ---------------------------------------------------------------------------
 // Start the game.
 
-// What you start with: a Sword and a Dagger in your hands,
-// and a Shield and a Boomerang in your carry sack (a pillowcase).
+// What you start with: a Sword and a Dagger on your Outfit, an empty carry sack (a pillowcase),
+// and some gold (see `gold` in the shop part).
 buildBag("carry");
 buildBag("body");
 addItem(itemType("Sword"), "body", 4, 3);
 addItem(itemType("Dagger"), "body", 5, 3);
-addItem(itemType("Shield"), "carry", 0, 0);
-addItem(itemType("Boomerang"), "carry", 2, 0);
 
 const backButton = document.getElementById("back-button");
 scavengeButton.addEventListener("click", goScavenge);

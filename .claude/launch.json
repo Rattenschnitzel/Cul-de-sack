@@ -8,6 +8,12 @@
       "port": 5500
     },
     {
+      "name": "queues",
+      "runtimeExecutable": "C:/Users/mail/AppData/Local/Programs/Python/Python310/python.exe",
+      "runtimeArgs": ["E:/P4/SmallGame/tools/queue_watch.py"],
+      "port": 8521
+    },
+    {
       "name": "shot-tracker",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "5510", "--bind", "127.0.0.1", "--directory", "D:/Work/AI_own/shotTracker"],

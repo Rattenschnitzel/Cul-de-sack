@@ -16,14 +16,30 @@ working rules. The full game description (every rule and number) is in
   - this file.
 - **Open items:** nothing is half done. Every change asked for so far is in and tested.
 
+## Since these notes were first written (2026-11-15)
+
+Much has been added; the sections below this one describe the older shop only. In short:
+
+- `index.html` is now the **start menu** (pick a critter, Play); the shop moved to **`shop.html`**.
+- **Street fight:** `fight.html` + `fight.js`, an isometric bullet-heaven round in a 200 x 140 square
+  suburb (streets, cul-de-sacs, a park, front yards, parked cars). The shop's "Go scavenge" opens it in
+  a frame over the shop; it fights with the items on the Outfit and sends the loot back as gold.
+- **Shared files:** `items.js` (every item, with its street-fight numbers, and the critters) and
+  `weapons.js` (the weapon rules: throw, swing, orbit, aura, crits, chain, pierce, blasts, lifesteal).
+- **Weapons designer:** `designer.html` + `designer.js`, edit items and test them in an arena.
+- **Shop changes:** no gear for now (`GEAR_ON` in game.js), a 6 x 6 Outfit, no hand rule, empty carry
+  sack, 20 starting gold. The old scavenge map and old shop fight are unused but still in game.js.
+- **Art:** `art/catalog/` (292 sprites, see docs/art-catalog.md), `art/ground/`, `art/sprites/`, and
+  pixel item pictures in `art/` (tools/make_items.py). Shadows are switched off (`SHADOWS_ON`).
+
 ## The user and how to work with them
 
 - **New to coding.** Explain each step in plain words: what you'll do, why, what changed. Define
   jargon. Keep answers friendly and concrete.
 - **Small steps.** Build one step at a time, and only the step asked for. No game code before
   they ask.
-- **Commits.** Commit and push only when they say so. After finishing a change, offer "Commit and
-  push?" with Yes / Not yet buttons.
+- **Commits.** Commit and push only when they say so, usually once at the end of the day. Don't
+  offer to commit after each change.
 - **Commit messages.**
   - Write the message to a file in the scratchpad and run `git commit -F <file>` (here-strings
     failed in PowerShell before).

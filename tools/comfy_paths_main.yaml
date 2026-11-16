@@ -1,0 +1,12 @@
+# Where this PC keeps the big image models (FLUX.3 Klein, its Qwen3-VL text model, the FLUX.2 VAE).
+# The ComfyUI started by start_comfy_main.bat reads this so it can find them.
+big:
+  base_path: D:/3dprogs/ComfyUI/models
+  unet: unet
+  diffusion_models: |-
+    diffusion_models
+    unet
+  text_encoders: text_encoders
+  clip: text_encoders
+  vae: vae
+  loras: loras

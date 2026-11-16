@@ -10,3 +10,6 @@ __pycache__/
 
 # Local Claude Code settings for this computer
 .claude/settings.local.json
+
+# The old smooth item pictures, kept on this computer only (they are in git's history anyway)
+art/old-smooth/

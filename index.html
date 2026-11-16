@@ -2,115 +2,146 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cul-de-sack: a trashure hunt game</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root { --text: #f6eed8; --dim: #c9c0a4; --accent: #ffd34d; --panel: rgba(20, 28, 16, 0.78); --line: #6d8a52; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; color: var(--text); font: 15px/1.4 system-ui, sans-serif; }
+    body {
+      background: radial-gradient(ellipse at 50% 35%, #6a9a44 0%, #4a7a32 45%, #2c4a20 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    }
+    /* A few things from the street scattered round the edges, and pests trotting along the bottom. */
+    #scenery { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+    #scenery img { position: absolute; image-rendering: pixelated; filter: drop-shadow(6px 4px 0 rgba(0, 0, 0, 0.25)); }
+    .trotter { bottom: 18px; animation: trot linear infinite; }
+    @keyframes trot { from { transform: translateX(-160px); } to { transform: translateX(calc(100vw + 160px)); } }
+    .trotter.back { animation-name: trot-back; }
+    @keyframes trot-back { from { transform: translateX(calc(100vw + 160px)) scaleX(-1); } to { transform: translateX(-160px) scaleX(-1); } }
+
+    header { text-align: center; position: relative; }
+    h1 { margin: 0; font-size: 64px; letter-spacing: 1px; color: var(--accent);
+         text-shadow: 0 4px 0 #6a3a10, 0 8px 18px rgba(0, 0, 0, 0.5); }
+    header p { margin: 4px 0 0; font-size: 20px; color: var(--text); text-shadow: 0 2px 4px #000; }
+    #pick-title { font-size: 18px; text-shadow: 0 2px 4px #000; margin: 0; }
+
+    #critters { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; padding: 0 16px; position: relative; }
+    .card {
+      width: 190px; padding: 12px 12px 14px; border-radius: 14px; cursor: pointer;
+      background: var(--panel); border: 3px solid transparent; text-align: center;
+      transition: transform 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: rgba(255, 211, 77, 0.45); }
+    .card.on { border-color: var(--accent); background: rgba(40, 54, 26, 0.92); transform: translateY(-6px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
+    .card .pic { height: 120px; display: flex; align-items: flex-end; justify-content: center; }
+    .card .pic img { height: 112px; image-rendering: pixelated; filter: drop-shadow(5px 4px 0 rgba(0, 0, 0, 0.3)); }
+    .card.on .pic img { animation: hop 0.5s ease-in-out infinite alternate; }
+    @keyframes hop { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-6px) rotate(3deg); } }
+    .card h2 { margin: 6px 0 2px; font-size: 19px; }
+    .card .note { color: var(--dim); font-size: 13px; min-height: 18px; }
+    .bars { margin-top: 8px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; align-items: center; font-size: 12px; text-align: left; }
+    .bar { height: 8px; border-radius: 4px; background: rgba(0, 0, 0, 0.4); overflow: hidden; }
+    .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #8fd35a, #ffd34d); }
+    .card .key { margin-top: 6px; font-size: 11px; color: var(--dim); }
+
+    nav { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; position: relative; }
+    nav a {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 12px;
+      color: var(--text); text-decoration: none; font-weight: 700; font-size: 18px;
+      background: #3d5a28; border: 2px solid var(--line); box-shadow: 0 4px 0 #1e2e14;
+      transition: transform 0.1s, background 0.1s;
+    }
+    nav a:hover { background: #4c6e32; transform: translateY(-2px); }
+    nav a.play { background: #c8862a; border-color: #ffd34d; box-shadow: 0 4px 0 #6a3a10; font-size: 22px; padding: 14px 30px; }
+    nav a.play:hover { background: #dc9a36; }
+    footer { color: var(--dim); font-size: 13px; text-shadow: 0 1px 2px #000; position: relative; }
+  </style>
 </head>
-<!-- data-screen says which screen shows: "shop", "map" (where to scavenge) or "fight".
-     game.js switches it, and style.css hides the parts that belong to the other screens. -->
-<body data-screen="shop">
-  <!-- Three columns: you on the left, your backpacks in the middle, the shop (or the fight) on the right.
-       On the scavenge screen, the map takes the place of the backpacks and the shop. -->
-  <div id="game">
-    <!-- The top bar: the game's name, and the way out to go scavenging -->
-    <header id="top-bar">
-      <div id="game-name">Cul-de-sack<span>a trashure hunt game</span></div>
-      <button id="scavenge-button" class="plank-button shop-only">🎒 Go scavenge →</button>
-    </header>
+<body>
+  <div id="scenery"></div>
+  <header>
+    <h1>Cul-de-sack</h1>
+    <p>a trashure hunt game</p>
+  </header>
+  <p id="pick-title">Pick your critter</p>
+  <div id="critters"></div>
+  <nav>
+    <a class="play" id="play" href="shop.html">▶ Play</a>
+    <a href="designer.html">🛠️ Weapons designer</a>
+  </nav>
+  <footer>Arrow keys or 1–5 to pick · Enter to play · You start in the shop: buy weapons, then go scavenging</footer>
 
-    <!-- You: your character and your numbers as a list (game.js fills them in) -->
-    <aside id="side" class="frame">
-      <img id="hero" src="art/characters/raccoon-1.png" alt="Raccoon">
-      <div class="plaque">Raccoon</div>
-      <ul id="totals"></ul>
-    </aside>
+  <script src="items.js"></script>
+  <script>
+    // The start menu: pick a critter (remembered in this browser, so the shop, the street fight and
+    // the weapons designer all use it), then play: the game starts in the shop.
+    const KEY = 'culdesack.critter';
+    const keys = Object.keys(CRITTERS);
+    let chosen = localStorage.getItem(KEY);
+    if (!CRITTERS[chosen]) chosen = 'raccoon';
 
-    <!-- The scavenge screen: pick an area to go to. game.js fills in one card per area. -->
-    <div id="map" class="frame map-only">
-      <h2>Where do you go scavenging?</h2>
-      <div id="map-power"></div>
-      <div id="areas"></div>
-      <button id="map-back" class="plank-button">← Back to the shop</button>
-    </div>
+    // Numbers shown as bars, each compared with the best critter at it.
+    const max = (f) => Math.max(...keys.map((k) => f(CRITTERS[k])));
+    const BARS = [
+      ['Health', (c) => c.health],
+      ['Speed', (c) => c.speed],
+      ['Looting', (c) => 1 / c.rummage],
+    ];
+    const card = {};
+    keys.forEach((k, i) => {
+      const c = CRITTERS[k];
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = `<div class="pic"><img src="art/catalog/critters/${k}.png" alt=""></div>
+        <h2>${c.name}</h2><div class="note">${c.note}</div>
+        <div class="bars">${BARS.map(([label, f]) => `<span>${label}</span><div class="bar"><i style="width:${Math.round(f(c) / max(f) * 100)}%"></i></div>`).join('')}</div>
+        <div class="key">press ${i + 1}</div>`;
+      el.onclick = () => choose(k);
+      el.ondblclick = () => { choose(k); location.href = document.getElementById('play').href; };
+      document.getElementById('critters').appendChild(el);
+      card[k] = el;
+    });
 
-    <!-- The two sacks: the carry sack (storage, doesn't fight), with the Sell crate under it,
-         and your outfit (your hands in the middle, plus squares from the vests, belts and trousers
-         you put on). game.js fills each with one square per cell. -->
-    <div id="pack-area" class="not-map">
-      <div class="bag-column">
-        <div class="bag-title">Carry sack <span>(doesn't fight)</span></div>
-        <div id="carry" class="grid-bag"></div>
-        <!-- Drop an item or gear here to sell it (on the shop screen) -->
-        <div id="sell" class="shop-only"></div>
-      </div>
-      <div class="bag-column">
-        <div class="bag-title">Outfit</div>
-        <div id="body" class="grid-bag"></div>
-        <div id="hands"></div>
-        <!-- The colours of the connection points: where each kind of gear attaches -->
-        <div id="gear-key">
-          <span class="point-vest">Vest</span>
-          <span class="point-belt">Belt</span>
-          <span class="point-pockets">Pockets</span>
-        </div>
-      </div>
-      <!-- Why a weapon or piece of gear can't go where you're dragging it -->
-      <div id="pack-hint"></div>
-    </div>
+    function choose(k) {
+      chosen = k;
+      try { localStorage.setItem(KEY, k); } catch (e) { /* storage off: the link below still carries it */ }
+      for (const [key, el] of Object.entries(card)) el.classList.toggle('on', key === k);
+    }
+    choose(chosen);
 
-    <!-- The shop: shelves with items, gear and sacks for sale (game.js fills them in),
-         and the possum who runs it -->
-    <div id="shop" class="frame shop-only">
-      <div id="shop-head">
-        <div class="plaque">Shop</div>
-        <div id="gold"></div>
-        <!-- For testing: free gold -->
-        <button id="free-gold" class="plank-button" title="For testing">+10g</button>
-      </div>
-      <!-- The possum, saying what just happened in the shop, with the Reroll button beside it -->
-      <div id="shopkeeper">
-        <div id="counter">
-          <div id="shop-message" class="bubble"></div>
-          <button id="reroll" class="plank-button"></button>
-        </div>
-        <img src="art/characters/possum-2.png" alt="The possum who runs the shop">
-      </div>
-      <h3>Items</h3>
-      <div id="offers"></div>
-      <h3>Gear <span>(drag onto your body, or into your sack to keep)</span></h3>
-      <div id="gear"></div>
-      <h3>Sacks</h3>
-      <div id="sacks"></div>
-    </div>
+    addEventListener('keydown', (e) => {
+      const i = keys.indexOf(chosen);
+      if (e.key === 'ArrowRight') choose(keys[(i + 1) % keys.length]);
+      else if (e.key === 'ArrowLeft') choose(keys[(i + keys.length - 1) % keys.length]);
+      else if (keys[Number(e.key) - 1]) choose(keys[Number(e.key) - 1]);
+      else if (e.key === 'Enter') location.href = document.getElementById('play').href;
+    });
 
-    <!-- The fight: one health bar per fighter, the result and the log.
-         game.js fills in the numbers. -->
-    <div id="fight" class="frame fight-only">
-      <h2 id="round"></h2>
-      <div class="fighter">
-        <div class="fighter-name">You</div>
-        <div class="bar"><div class="bar-fill" id="player-bar"></div></div>
-        <div class="fighter-text" id="player-text"></div>
-        <!-- Rage (makes weapons hit harder) and exhaustion (too much and weapons stop) -->
-        <div class="bar meter"><div class="bar-fill rage" id="rage-bar"></div></div>
-        <div class="fighter-text" id="rage-text"></div>
-        <div class="bar meter"><div class="bar-fill exhaustion" id="exhaustion-bar"></div></div>
-        <div class="fighter-text" id="exhaustion-text"></div>
-      </div>
-      <div class="fighter">
-        <div class="fighter-name" id="enemy-name"></div>
-        <div class="bar"><div class="bar-fill enemy" id="enemy-bar"></div></div>
-        <div class="fighter-text" id="enemy-text"></div>
-      </div>
-      <div id="fight-result"></div>
-      <button id="back-button" class="plank-button" hidden>🛒 Back to the shop</button>
-      <!-- What happened in the fight, newest first -->
-      <ul id="log"></ul>
-    </div>
-  </div>
-
-  <!-- The info card that shows while the pointer is over an item -->
-  <div id="tooltip" hidden></div>
-
-  <script src="game.js"></script>
+    // Scenery: street things round the edges, a few pests trotting by along the bottom.
+    const scenery = document.getElementById('scenery');
+    const put = (src, css, cls = '') => {
+      const img = document.createElement('img');
+      img.src = `art/${src}.png`; img.className = cls; img.alt = '';
+      Object.assign(img.style, css);
+      scenery.appendChild(img);
+      return img;
+    };
+    put('catalog/trees/oak', { left: '-30px', top: '-20px', width: '300px' });
+    put('catalog/trees/red-maple', { right: '-20px', top: '10px', width: '220px' });
+    put('catalog/trees/orange-maple', { left: '2%', bottom: '90px', width: '200px' });
+    put('catalog/trees/yellow-birch', { right: '3%', bottom: '100px', width: '160px' });
+    put('sprites/bin-garbage', { left: '18%', bottom: '70px', height: '68px' });
+    put('sprites/bin-recycling', { left: 'calc(18% + 44px)', bottom: '64px', height: '68px' });
+    put('sprites/bin-compost', { right: '19%', bottom: '70px', height: '68px' });
+    put('catalog/props/mailbox', { right: '24%', bottom: '74px', height: '68px' });
+    put('catalog/props/fire-hydrant', { left: '27%', bottom: '66px', height: '48px' });
+    const pests = ['dogs/corgi', 'dogs/beagle', 'animals/canada-goose', 'dogs/chihuahua', 'animals/skunk', 'dogs/pug'];
+    pests.forEach((p, i) => {
+      const img = put(`catalog/${p}`, { height: `${p.includes('chihuahua') ? 40 : 56}px`, animationDuration: `${14 + i * 3}s`,
+                                        animationDelay: `${-i * 4.5}s` }, i % 2 ? 'trotter back' : 'trotter');
+      img.style.left = '0';
+    });
+  </script>
 </body>
 </html>
